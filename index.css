@@ -1,0 +1,13 @@
+canvas {
+    background-color: black;
+}
+
+#actions {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+button {
+    width: 200px;
+    height: 100px;
+}

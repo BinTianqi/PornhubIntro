@@ -1,0 +1,9 @@
+{
+  "name": "PornhubIntro",
+  "version": "1.0",
+  "type": "module",
+  "scripts": {
+  },
+  "author": "BinTianqi",
+  "description": "A Pornhub-style intro generator"
+}
