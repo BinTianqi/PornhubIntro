@@ -1,10 +1,10 @@
 import { delay } from "./utils.js"
 const orange = "#FF9900"
 let debugMode = false
-let debugElapsed = 1900
+let debugElapsed = 590
 let pText = "Porn"
 let hText = "hub"
-let cText = "community"
+let cText = "community" 
 
 function startOnscreenAnimation() {
     const canvas = document.querySelector("canvas")
@@ -32,26 +32,51 @@ function startAnimation(ctx) {
 function drawRec(ctx, elapsed) {
     if(elapsed >= 600) return
     ctx.fillStyle = orange
-    const fallProgress = Math.max((elapsed - 420) / 180, 0)
+    const linearProgress = Math.max((elapsed - 420) / 180, 0)
+    const progress = linearProgress ** 3
     if((elapsed >= 100 && elapsed < 300) || (elapsed >= 420 && elapsed < 600)) {
         ctx.beginPath()
-        ctx.arc(865, 540 + fallProgress * 100, 35, 0, 2 * Math.PI)
+        ctx.arc(865, 540 + progress * 100, 35, 0, 2 * Math.PI)
         ctx.fill()
     }
     ctx.font = "1000 100px roboto"
     ctx.letterSpacing = "0px"
-    ctx.fillText("REC", 905 , 575 + fallProgress * 100)
+    ctx.fillText("REC", 905 , 575 + progress * 100)
 }
 
 function drawLaptop(ctx, elapsed) {
-    if(elapsed < 590 || elapsed >= 1190) return
+    if(elapsed < 590 || elapsed >= 1220) return
     ctx.lineWidth = 10
     ctx.strokeStyle = orange
+    if(elapsed < 660) {
+        const appearProgress = (elapsed - 590) / 70
+        ctx.save()
+        ctx.beginPath()
+        ctx.rect(770, 660 - 240 * appearProgress, 380, 240 * appearProgress)
+        ctx.clip()
+    }
+    if(elapsed > 1060) {
+        const disappearProgress = (elapsed - 1060) / 160
+        ctx.save()
+        ctx.beginPath()
+        ctx.moveTo(960, 540)
+        ctx.arc(960, 540, 200, Math.PI * (-0.5 + disappearProgress * 1), Math.PI * (-0.5 - disappearProgress * 1))
+        ctx.closePath()
+        ctx.clip()
+    }
     ctx.beginPath()
     ctx.roundRect(810, 450, 300, 180, 20)
     ctx.stroke()
+    if(elapsed < 660 || elapsed > 1060) { ctx.restore() }
     ctx.lineJoin = "round"
     ctx.lineWidth = 10
+    if(elapsed >= 1090) {
+        const disappearProgress = (elapsed - 1090) / 130
+        ctx.save()
+        ctx.beginPath()
+        ctx.rect(770 + disappearProgress * 190, 640, 380 - disappearProgress * 380, 30)
+        ctx.clip()
+    }
     ctx.beginPath()
     ctx.moveTo(780, 650)
     ctx.lineTo(1140, 650)
@@ -59,29 +84,31 @@ function drawLaptop(ctx, elapsed) {
     ctx.lineTo(790, 660)
     ctx.closePath()
     ctx.stroke()
+    if(elapsed >= 1090) { ctx.restore() }
 }
 
 function drawUploadCircle(ctx, elapsed) {
-    if(elapsed < 700 || elapsed >= 1190) return
-    const circleProgress = Math.min((elapsed - 700) / 160, 1)
+    if(elapsed < 690 || elapsed >= 1190) return
+    const linearCircleProgress = Math.min((elapsed - 690) / 200, 1)
+    const circleProgress = 1 - (1 - linearCircleProgress) ** 3
     ctx.fillStyle = orange
     ctx.beginPath()
-    ctx.arc(960, 680 - circleProgress * 140, 60, 0, 2 * Math.PI)
+    ctx.arc(960, 640 - circleProgress * 100, 60, 0, 2 * Math.PI)
     ctx.fill()
-    ctx.clearRect(900, 615, 120, 120)
+    ctx.clearRect(900, 615, 120, 130)
     ctx.fillStyle = "black"
     if(elapsed >= 790) {
         const triangleProgress = (elapsed - 790) / 400
         ctx.beginPath()
-        ctx.moveTo(960, 620 - triangleProgress * 120)
-        ctx.lineTo(1000, 660 - triangleProgress * 120)
-        ctx.lineTo(920, 660 - triangleProgress * 120)
+        ctx.moveTo(960, 600 - triangleProgress * 100)
+        ctx.lineTo(1000, 640 - triangleProgress * 100)
+        ctx.lineTo(920, 640 - triangleProgress * 100)
         ctx.closePath()
         ctx.fill()
     }
-    if(elapsed < 1150) {
-        const rectProgress = (elapsed - 700) / 390
-        ctx.fillRect(945, 660 - rectProgress * 90, 30, 60)
+    if(elapsed >= 930 && elapsed < 1190) {
+        const rectProgress = Math.min((elapsed - 930) / 160, 1)
+        ctx.fillRect(945, 600 - rectProgress * 35, 30, 60)
     }
 }
 
@@ -104,7 +131,8 @@ function drawPlayCircle(ctx, elapsed) {
         ctx.fill()
     }
     if(elapsed >= 1320) {
-        const cursorProgress = (elapsed - 1320) / 430
+        const linearCursorProgress = (elapsed - 1320) / 430
+        const cursorProgress = 1 - (1 - linearCursorProgress) ** 2
         drawCursor(ctx, 1020 - cursorProgress * 60, 600 - cursorProgress * 60)
     }
 }
@@ -144,7 +172,7 @@ function drawText(ctx, elapsed) {
         const charProgress = Math.min((elapsed - charStartTime) / 100, 1)
         const charMetrics = ctx.measureText(pText[i])
         const charWidth = charMetrics.width
-        const gradient = ctx.createLinearGradient(pStartX, 500, pStartX + charWidth, 500)
+        const gradient = ctx.createLinearGradient(pStartX, 500, pStartX + charWidth + 10, 500)
         gradient.addColorStop(0, "white")
         gradient.addColorStop(Math.max(charProgress - 0.05, 0), "white")
         gradient.addColorStop(charProgress, orange)
@@ -158,13 +186,14 @@ function drawText(ctx, elapsed) {
     if(elapsed >= 2010) {
         const hTextStartX = 960 - phWidth / 2 + pMetrics.width + 40
         const hCenterX = hTextStartX + hMetrics.width / 2
-        const hProgress = Math.min((elapsed - 2010) / 200, 1)
+        const hLinearProgress = Math.min((elapsed - 2010) / 200, 1)
+        const hProgress = 1 - (1 - hLinearProgress) ** 6
         ctx.translate(hCenterX, 445)
         ctx.rotate((-40 + 40 * hProgress) * Math.PI / 180)
         ctx.scale(0.6 + 0.4 * hProgress, 0.6 + 0.4 * hProgress)
         ctx.fillStyle = orange
         ctx.beginPath()
-        ctx.roundRect(-hMetrics.width / 2 - 20, -80, hMetrics.width + 40, 160, 10)
+        ctx.roundRect(-hMetrics.width / 2 - 20, -90, hMetrics.width + 40, 180, 10)
         ctx.fill()
         ctx.fillStyle = "black"
         ctx.fillText(hText, -hMetrics.width / 2, 55)
@@ -173,15 +202,17 @@ function drawText(ctx, elapsed) {
     ctx.fillStyle = "white"
     ctx.font = "60px roboto"
     const cMetrics = ctx.measureText(cText)
-    const cCharSpacing = (phWidth - cMetrics.width) / (cText.length - 1)
-    if(elapsed >= 1850) { // until 2150
-        let cStartX = 960 - phWidth / 2
+    const cCharSpacing = (phWidth - cMetrics.width - 10) / (cText.length - 1)
+    if(elapsed >= 1850) {
+        const cProgress = Math.min((elapsed - 1850) / 300, 1)
+        const rotateProgress = 1 - (1 - cProgress) ** 3
+        let cStartX = 965 - phWidth / 2
         for(const i in cText) {
             const charStartTime = 1850 + i * (300 / cText.length)
             if(charStartTime > elapsed) break
             const charMetrics = ctx.measureText(cText[i])
             const charProgress = Math.min((elapsed - charStartTime) / 130, 1)
-            const degree = (charProgress < 0.5 ? 40 : -20) + (charProgress < 0.5 ? charProgress * -60 : charProgress * 20)
+            const degree = (charProgress < 0.5 ? 40 : -20) + (charProgress < 0.5 ? charProgress * -60 : rotateProgress * 20)
             ctx.translate(cStartX, 610)
             ctx.save()
             ctx.rotate(degree * Math.PI / 180)
