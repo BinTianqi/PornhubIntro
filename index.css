@@ -1,10 +1,17 @@
 canvas {
     background-color: black;
+    max-width: 100%;
+    margin-bottom: 10px;
+}
+
+#input-text {
+    > input {
+        margin-bottom: 5px;
+    }
 }
 
 #actions {
     display: flex;
-    flex-wrap: wrap;
 }
 
 button {
