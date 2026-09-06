@@ -1,4 +1,5 @@
-import { delay } from "./utils.js"
+import "./index.css"
+
 const orange = "#FF9900"
 let debugMode = false
 let debugElapsed = 1900
@@ -7,14 +8,14 @@ let hText = "hub"
 let cText = "community"
 
 function startOnscreenAnimation() {
-    const canvas = document.querySelector("canvas")
-    const ctx = canvas.getContext("2d")
+    const canvas = document.querySelector("canvas")!
+    const ctx = canvas.getContext("2d")!
     startAnimation(ctx)
 }
 
-function startAnimation(ctx) {
-    let startTime
-    function frame(timestamp) {
+function startAnimation(ctx: CanvasRenderingContext2D) {
+    let startTime = 0
+    function frame(timestamp: number) {
         if(startTime == undefined) startTime = timestamp
         const elapsed = debugMode ? debugElapsed : timestamp - startTime
         ctx.clearRect(0, 0, 1920, 1080)
@@ -29,7 +30,7 @@ function startAnimation(ctx) {
     requestAnimationFrame(frame)
 }
 
-function drawRec(ctx, elapsed) {
+function drawRec(ctx: CanvasRenderingContext2D, elapsed: number) {
     if(elapsed >= 600) return
     ctx.fillStyle = orange
     const fallProgress = Math.max((elapsed - 420) / 180, 0)
@@ -43,7 +44,7 @@ function drawRec(ctx, elapsed) {
     ctx.fillText("REC", 905 , 575 + fallProgress * 100)
 }
 
-function drawLaptop(ctx, elapsed) {
+function drawLaptop(ctx: CanvasRenderingContext2D, elapsed: number) {
     if(elapsed < 590 || elapsed >= 1190) return
     ctx.lineWidth = 10
     ctx.strokeStyle = orange
@@ -61,7 +62,7 @@ function drawLaptop(ctx, elapsed) {
     ctx.stroke()
 }
 
-function drawUploadCircle(ctx, elapsed) {
+function drawUploadCircle(ctx: CanvasRenderingContext2D, elapsed: number) {
     if(elapsed < 700 || elapsed >= 1190) return
     const circleProgress = Math.min((elapsed - 700) / 160, 1)
     ctx.fillStyle = orange
@@ -85,7 +86,7 @@ function drawUploadCircle(ctx, elapsed) {
     }
 }
 
-function drawPlayCircle(ctx, elapsed) {
+function drawPlayCircle(ctx: CanvasRenderingContext2D, elapsed: number) {
     if(elapsed < 1190 || elapsed >= 1750) return
     ctx.strokeStyle = orange
     const circleProgress = Math.min((elapsed - 1220) / 100, 1)
@@ -109,7 +110,7 @@ function drawPlayCircle(ctx, elapsed) {
     }
 }
 
-function drawCursor(ctx, x, y) {
+function drawCursor(ctx: CanvasRenderingContext2D, x: number, y: number) {
     ctx.translate(x, y)
     ctx.rotate(-45 * Math.PI / 180)
     ctx.beginPath()
@@ -129,7 +130,7 @@ function drawCursor(ctx, x, y) {
     ctx.setTransform(1, 0, 0, 1, 0, 0)
 }
 
-function drawText(ctx, elapsed) {
+function drawText(ctx: CanvasRenderingContext2D, elapsed: number) {
     if(elapsed < 1750) return
     ctx.fillStyle = "white"
     ctx.letterSpacing = "0px"
@@ -138,7 +139,7 @@ function drawText(ctx, elapsed) {
     const hMetrics = ctx.measureText(hText)
     const phWidth = pMetrics.width + hMetrics.width + 60
     let pStartX = 960 - phWidth / 2
-    for(const i in pText) {
+    for (let i = 0; i < pText.length; i++) {
         const charStartTime = i * (200 / pText.length) + 1750
         if(charStartTime > elapsed) continue
         const charProgress = Math.min((elapsed - charStartTime) / 100, 1)
@@ -176,7 +177,7 @@ function drawText(ctx, elapsed) {
     const cCharSpacing = (phWidth - cMetrics.width) / (cText.length - 1)
     if(elapsed >= 1850) { // until 2150
         let cStartX = 960 - phWidth / 2
-        for(const i in cText) {
+        for(let i = 0; i < cText.length; i++) {
             const charStartTime = 1850 + i * (300 / cText.length)
             if(charStartTime > elapsed) break
             const charMetrics = ctx.measureText(cText[i])
@@ -194,7 +195,7 @@ function drawText(ctx, elapsed) {
     }
 }
 
-function drawRoundRectPath(cxt, width, height, radius) {
+function drawRoundRectPath(cxt: CanvasRenderingContext2D, width: number, height: number, radius: number) {
     cxt.beginPath()
     cxt.arc(width - radius, height - radius, radius, 0, Math.PI / 2)
     cxt.lineTo(radius, height)
@@ -207,7 +208,7 @@ function drawRoundRectPath(cxt, width, height, radius) {
     cxt.closePath()
 }
 
-function drawReferentialLines(ctx) {
+function drawReferentialLines(ctx: CanvasRenderingContext2D) {
     ctx.lineWidth = 3
     ctx.strokeStyle = "white"
     ctx.beginPath()
@@ -230,7 +231,7 @@ function drawReferentialLines(ctx) {
 }
 
 function exportAnimation() {
-    const canvas = document.querySelector("canvas")
+    const canvas = document.querySelector("canvas")!
     const stream = canvas.captureStream(60)
     const recorder = new MediaRecorder(stream, {  })
     recorder.addEventListener("dataavailable", (e) => {
@@ -243,15 +244,15 @@ function exportAnimation() {
     })
     recorder.start()
     setTimeout(() => { recorder.stop() }, 3000)
-    startAnimation(canvas.getContext("2d"))
+    startAnimation(canvas.getContext("2d")!)
 }
 
 function initialize() {
-    document.getElementById("start").addEventListener("click", startOnscreenAnimation)
-    document.getElementById("debug").addEventListener("click", () => { debugMode = true })
-    document.getElementById("prev-frame").addEventListener("click", () => { debugElapsed -= 33; startOnscreenAnimation() })
-    document.getElementById("next-frame").addEventListener("click", () => { debugElapsed += 33; startOnscreenAnimation() })
-    document.getElementById("export").addEventListener("click", exportAnimation)
+    document.getElementById("start")!.addEventListener("click", startOnscreenAnimation)
+    document.getElementById("debug")!.addEventListener("click", () => { debugMode = true })
+    document.getElementById("prev-frame")!.addEventListener("click", () => { debugElapsed -= 33; startOnscreenAnimation() })
+    document.getElementById("next-frame")!.addEventListener("click", () => { debugElapsed += 33; startOnscreenAnimation() })
+    document.getElementById("export")!.addEventListener("click", exportAnimation)
 }
 
 document.addEventListener("DOMContentLoaded", initialize)

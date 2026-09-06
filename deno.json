@@ -1,0 +1,23 @@
+{
+  "fmt": {
+    "indentWidth": 4,
+    "semiColons": false,
+    "lineWidth": 300,
+    "trailingCommas": "onlyMultiLine"
+  },
+  "tasks": {
+    "dev": "deno run --allow-all npm:vite src"
+  },
+  "nodeModulesDir": "auto",
+  "imports": {
+    "@deno/vite-plugin": "npm:@deno/vite-plugin@^2.0.3",
+    "vite": "npm:vite@^8.2.2"
+  },
+  "compilerOptions": {
+    "lib": [
+        "dom",
+        "dom.iterable",
+        "deno.ns"
+    ]
+  }
+}

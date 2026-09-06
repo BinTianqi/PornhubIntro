@@ -1,4 +1,5 @@
 canvas {
+    max-width: 90%;
     background-color: black;
 }
 
@@ -8,6 +9,6 @@ canvas {
 }
 
 button {
-    width: 200px;
-    height: 100px;
+    width: 120px;
+    height: 30px;
 }
