@@ -3,4 +3,5 @@ package-lock.json
 deno.lock
 .vscode
 .vite
+src/public/frames
 
