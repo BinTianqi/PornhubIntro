@@ -6,13 +6,21 @@
     <script src="./index.ts" type="module"></script>
 </head>
 <body>
-    <canvas width="1920" height="1080"></canvas>
-    <div id="actions">
-        <button id="start">Start</button>
-        <button id="debug">Debug mode</button>
-        <button id="prev-frame">Previous frame</button>
-        <button id="next-frame">Next frame</button>
-        <button id="export">Export</button>
-    </div>
+    <ph-app>
+        <canvas width="1920" height="1080"></canvas>
+        <input type="range" class="slider" max="1000" value="0">
+        <div class="progress">
+            <span class="percent">0.0000</span>
+            <span class="time">0</span>
+        </div>
+        <div id="actions">
+            <button class="start">Start</button>
+            <button class="export">Export</button>
+        </div>
+        <div>
+            <input type="checkbox" id="debug-checkbox">
+            <label for="debug-checkbox">Debug mode</label>
+        </div>
+    </ph-app>
 </body>
 </html>

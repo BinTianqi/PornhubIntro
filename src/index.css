@@ -8,6 +8,10 @@ canvas {
     flex-wrap: wrap;
 }
 
+input.slider {
+    width: 90%;
+}
+
 button {
     width: 120px;
     height: 30px;

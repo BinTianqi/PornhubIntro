@@ -1,9 +1,11 @@
 export default class PHCanvas {
-    static Orange = "#FF9900"
+    static PhOrange = "#FF9900"
+    /** Default to that orange color, will change when debug mode is activated */
+    static ThemeColor = this.PhOrange
 
     static drawRec(ctx: CanvasRenderingContext2D, elapsed: number) {
         if (elapsed >= 600) return
-        ctx.fillStyle = PHCanvas.Orange
+        ctx.fillStyle = PHCanvas.ThemeColor
         const fallProgress = Math.max((elapsed - 420) / 180, 0)
         if ((elapsed >= 100 && elapsed < 300) || (elapsed >= 420 && elapsed < 600)) {
             ctx.beginPath()
@@ -18,7 +20,7 @@ export default class PHCanvas {
     static drawLaptop(ctx: CanvasRenderingContext2D, elapsed: number) {
         if (elapsed < 590 || elapsed >= 1190) return
         ctx.lineWidth = 10
-        ctx.strokeStyle = PHCanvas.Orange
+        ctx.strokeStyle = PHCanvas.ThemeColor
         ctx.beginPath()
         ctx.roundRect(810, 450, 300, 180, 20)
         ctx.stroke()
@@ -36,7 +38,7 @@ export default class PHCanvas {
     static drawUploadCircle(ctx: CanvasRenderingContext2D, elapsed: number) {
         if (elapsed < 700 || elapsed >= 1190) return
         const circleProgress = Math.min((elapsed - 700) / 160, 1)
-        ctx.fillStyle = PHCanvas.Orange
+        ctx.fillStyle = PHCanvas.ThemeColor
         ctx.beginPath()
         ctx.arc(960, 680 - circleProgress * 140, 60, 0, 2 * Math.PI)
         ctx.fill()
@@ -59,7 +61,7 @@ export default class PHCanvas {
 
     static drawPlayCircle(ctx: CanvasRenderingContext2D, elapsed: number) {
         if (elapsed < 1190 || elapsed >= 1750) return
-        ctx.strokeStyle = PHCanvas.Orange
+        ctx.strokeStyle = PHCanvas.ThemeColor
         const circleProgress = Math.min((elapsed - 1220) / 100, 1)
         ctx.beginPath()
         ctx.arc(960, 540, 45 + circleProgress * 20, 0, 2 * Math.PI)
@@ -67,7 +69,7 @@ export default class PHCanvas {
         ctx.stroke()
         if (elapsed >= 1290) {
             ctx.lineJoin = "miter"
-            ctx.fillStyle = PHCanvas.Orange
+            ctx.fillStyle = PHCanvas.ThemeColor
             ctx.beginPath()
             ctx.moveTo(935, 505)
             ctx.lineTo(935, 575)
@@ -95,7 +97,7 @@ export default class PHCanvas {
         ctx.closePath()
         ctx.fillStyle = "black"
         ctx.fill()
-        ctx.strokeStyle = PHCanvas.Orange
+        ctx.strokeStyle = PHCanvas.ThemeColor
         ctx.lineWidth = 2
         ctx.stroke()
         ctx.setTransform(1, 0, 0, 1, 0, 0)
@@ -125,8 +127,8 @@ export default class PHCanvas {
             const gradient = ctx.createLinearGradient(pStartX, 500, pStartX + charWidth, 500)
             gradient.addColorStop(0, "white")
             gradient.addColorStop(Math.max(charProgress - 0.05, 0), "white")
-            gradient.addColorStop(charProgress, PHCanvas.Orange)
-            gradient.addColorStop(Math.min(charProgress + 0.2, 1), PHCanvas.Orange)
+            gradient.addColorStop(charProgress, PHCanvas.ThemeColor)
+            gradient.addColorStop(Math.min(charProgress + 0.2, 1), PHCanvas.ThemeColor)
             gradient.addColorStop(Math.min(charProgress + 0.25, 1), "black")
             gradient.addColorStop(1, "black")
             ctx.fillStyle = gradient
@@ -140,7 +142,7 @@ export default class PHCanvas {
             ctx.translate(hCenterX, 445)
             ctx.rotate((-40 + 40 * hProgress) * Math.PI / 180)
             ctx.scale(0.6 + 0.4 * hProgress, 0.6 + 0.4 * hProgress)
-            ctx.fillStyle = PHCanvas.Orange
+            ctx.fillStyle = PHCanvas.ThemeColor
             ctx.beginPath()
             ctx.roundRect(-hMetrics.width / 2 - 20, -80, hMetrics.width + 40, 160, 10)
             ctx.fill()
@@ -192,5 +194,9 @@ export default class PHCanvas {
             ctx.lineTo(1920, i)
         }
         ctx.stroke()
+    }
+
+    static drawTemplateImage(ctx: CanvasRenderingContext2D, image: ImageBitmap) {
+        ctx.drawImage(image, 0, 0)
     }
 }
