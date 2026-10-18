@@ -1,6 +1,6 @@
 import { startAnimation } from "./animation.js"
 
-let debugElapsed = JSON.parse(localStorage.getItem("debug_elapsed"))
+let debugElapsed = 0
 
 function startOnscreenAnimation(debugMode, singleFrame) {
     const canvas = document.querySelector("canvas")
@@ -30,10 +30,25 @@ function exportAnimation() {
 }
 
 function initialize() {
+    debugElapsed = JSON.parse(localStorage.getItem("debug_elapsed"))
     document.getElementById("start").addEventListener("click", () => { startOnscreenAnimation(false, false) })
-    document.getElementById("prev-frame").addEventListener("click", () => { debugElapsed -= 33; startOnscreenAnimation(true, true) })
-    document.getElementById("next-frame").addEventListener("click", () => { debugElapsed += 33; startOnscreenAnimation(true, true) })
+    document.getElementById("minus5").addEventListener("click", () => { debugElapsed -= 5; startOnscreenAnimation(true, true) })
+    document.getElementById("prev-frame").addEventListener("click", () => { debugElapsed -= 33.3; startOnscreenAnimation(true, true) })
+    document.getElementById("draw").addEventListener("click", () => { startOnscreenAnimation(true, true) })
+    document.getElementById("next-frame").addEventListener("click", () => { debugElapsed += 33.3; startOnscreenAnimation(true, true) })
+    document.getElementById("plus5").addEventListener("click", () => { debugElapsed += 5; startOnscreenAnimation(true, true) })
     document.getElementById("export").addEventListener("click", exportAnimation)
+    loadImages()
+}
+
+function loadImages() {
+    for(let i = 0; i <= 91; i++) {
+        const img = new Image()
+        const id = i < 10 ? "0" + i : i.toString()
+        img.src = "PHIntro/Pornhub" + id + ".jpg"
+        img.id = "img-" + id
+        document.getElementById("images").appendChild(img)
+    }
 }
 
 document.addEventListener("DOMContentLoaded", initialize)

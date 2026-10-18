@@ -10,7 +10,7 @@ canvas {
     }
 }
 
-#actions {
+#actions, #debug-menu {
     display: flex;
 }
 
