@@ -2,177 +2,373 @@ export default class PHCanvas {
     static PhOrange = "#FF9900"
     /** Default to that orange color, will change when debug mode is activated */
     static ThemeColor = this.PhOrange
+    static WhiteThemeColor = "white"
 
     static drawRec(ctx: CanvasRenderingContext2D, elapsed: number) {
-        if (elapsed >= 600) return
+        if (elapsed >= 580) return
         ctx.fillStyle = PHCanvas.ThemeColor
-        const fallProgress = Math.max((elapsed - 420) / 180, 0)
-        if ((elapsed >= 100 && elapsed < 300) || (elapsed >= 420 && elapsed < 600)) {
+        const fallProgress = (elapsed < 420 ? 0 : (elapsed - 420) / (580 - 420)) ** 3
+        if ((elapsed >= 90 && elapsed < 300) || (elapsed >= 420 && elapsed < 580)) {
             ctx.beginPath()
-            ctx.arc(865, 540 + fallProgress * 100, 35, 0, 2 * Math.PI)
+            ctx.arc(805, 1080 / 2 + fallProgress * 190, 60, 0, 2 * Math.PI)
             ctx.fill()
         }
-        ctx.font = "1000 100px roboto"
-        ctx.letterSpacing = "0px"
-        ctx.fillText("REC", 905, 575 + fallProgress * 100)
+        ctx.textBaseline = "middle"
+        ctx.font = "1000 150px roboto" // I don't know what font they use
+        ctx.letterSpacing = "2px"
+        ctx.fillText("REC", 890, 550 + fallProgress * 190)
     }
 
     static drawLaptop(ctx: CanvasRenderingContext2D, elapsed: number) {
-        if (elapsed < 590 || elapsed >= 1190) return
-        ctx.lineWidth = 10
-        ctx.strokeStyle = PHCanvas.ThemeColor
-        ctx.beginPath()
-        ctx.roundRect(810, 450, 300, 180, 20)
-        ctx.stroke()
-        ctx.lineJoin = "round"
-        ctx.lineWidth = 10
-        ctx.beginPath()
-        ctx.moveTo(780, 650)
-        ctx.lineTo(1140, 650)
-        ctx.lineTo(1130, 660)
-        ctx.lineTo(790, 660)
-        ctx.closePath()
-        ctx.stroke()
+        if (elapsed < 580 || elapsed >= 1200) return
+        let y = 616 // top of the laptop base
+        if (elapsed < 620) {
+            const progress = (elapsed - 580) / (620 - 580)
+            y = 767 - 135 * progress
+        } else if (elapsed < 920) {
+            const progress = Math.min(1, (elapsed - 620) / (760 - 620))
+            y = (767 - 135) - ((767 - 135) - 616) * easeOutCubic(progress)
+        } else {
+            const progress = (elapsed - 920) / (1200 - 920)
+            y = 616 + (641 - 616) * progress
+        }
+        this.drawLaptopBase(ctx, y, elapsed)
+        this.drawLaptopScreenFrame(ctx, y - 10, elapsed)
     }
 
-    static drawUploadCircle(ctx: CanvasRenderingContext2D, elapsed: number) {
-        if (elapsed < 700 || elapsed >= 1190) return
-        const circleProgress = Math.min((elapsed - 700) / 160, 1)
-        ctx.fillStyle = PHCanvas.ThemeColor
-        ctx.beginPath()
-        ctx.arc(960, 680 - circleProgress * 140, 60, 0, 2 * Math.PI)
-        ctx.fill()
-        ctx.clearRect(900, 615, 120, 120)
-        ctx.fillStyle = "black"
-        if (elapsed >= 790) {
-            const triangleProgress = (elapsed - 790) / 400
+    static drawLaptopScreenFrame(ctx: CanvasRenderingContext2D, y: number, elapsed: number) {
+        if (elapsed < 620) return
+        const outerRadius = 22
+        const innerRadius = 5
+        const width = 1196 - 723 // constant bottom width
+        const maxHeight = 607 - 312 // when the screen is a rectangle
+        const thickness = 607 - 587
+        let topWidth = 0, height = 0
+        if (elapsed < 680) {
+            const startWidth = 1208 - 712
+            const startHeight = 622 - 368
+            const progress = (elapsed - 620) / (680 - 620)
+            topWidth = startWidth + (width - startWidth) * progress
+            height = startHeight + (maxHeight - startHeight) * progress
+        } else {
+            const finalWidth = 1191 - 727
+            const finalHeight = 616 - 333
+            const progress = Math.min(1, (elapsed - 680) / (800 - 680))
+            topWidth = width - (width - finalWidth) * progress
+            height = maxHeight - (maxHeight - finalHeight) * progress
+        }
+
+        ctx.save()
+        if (elapsed > 1060) {
+            const disappearProgress = (elapsed - 1060) / (1200 - 1060)
+            const angle = Math.PI * disappearProgress
             ctx.beginPath()
-            ctx.moveTo(960, 620 - triangleProgress * 120)
-            ctx.lineTo(1000, 660 - triangleProgress * 120)
-            ctx.lineTo(920, 660 - triangleProgress * 120)
+            ctx.arc(1920 / 2, 1080 / 2, 500, -Math.PI / 2 + angle, -Math.PI / 2 - angle)
+            ctx.lineTo(1920 / 2, 1080 / 2)
             ctx.closePath()
-            ctx.fill()
+            ctx.clip()
         }
-        if (elapsed < 1150) {
-            const rectProgress = (elapsed - 700) / 390
-            ctx.fillRect(945, 660 - rectProgress * 90, 30, 60)
-        }
-    }
 
-    static drawPlayCircle(ctx: CanvasRenderingContext2D, elapsed: number) {
-        if (elapsed < 1190 || elapsed >= 1750) return
-        ctx.strokeStyle = PHCanvas.ThemeColor
-        const circleProgress = Math.min((elapsed - 1220) / 100, 1)
         ctx.beginPath()
-        ctx.arc(960, 540, 45 + circleProgress * 20, 0, 2 * Math.PI)
-        ctx.lineWidth = 40 - circleProgress * 34
-        ctx.stroke()
-        if (elapsed >= 1290) {
-            ctx.lineJoin = "miter"
-            ctx.fillStyle = PHCanvas.ThemeColor
-            ctx.beginPath()
-            ctx.moveTo(935, 505)
-            ctx.lineTo(935, 575)
-            ctx.lineTo(995, 540)
-            ctx.closePath()
-            ctx.fill()
-        }
-        if (elapsed >= 1320) {
-            const cursorProgress = (elapsed - 1320) / 430
-            PHCanvas.drawCursor(ctx, 1020 - cursorProgress * 60, 600 - cursorProgress * 60)
-        }
+        this.drawRoundedTrapezoidPath(ctx, 723, y, width, topWidth, height, outerRadius)
+        this.drawRoundedTrapezoidPath(
+            ctx,
+            723 + thickness, y - thickness,
+            width - 2 * thickness, topWidth - 2 * thickness,
+            height - 2 * thickness, innerRadius
+        )
+        ctx.fillStyle = this.ThemeColor
+        ctx.fill("evenodd")
+
+        ctx.restore()
     }
 
-    static drawCursor(ctx: CanvasRenderingContext2D, x: number, y: number) {
-        ctx.translate(x, y)
-        ctx.rotate(-45 * Math.PI / 180)
-        ctx.beginPath()
-        ctx.moveTo(0, 0)
-        ctx.lineTo(16, 16)
-        ctx.lineTo(8, 16)
-        ctx.lineTo(8, 40)
-        ctx.lineTo(-8, 40)
-        ctx.lineTo(-8, 16)
-        ctx.lineTo(-16, 16)
-        ctx.closePath()
-        ctx.fillStyle = "black"
-        ctx.fill()
-        ctx.strokeStyle = PHCanvas.ThemeColor
-        ctx.lineWidth = 2
-        ctx.stroke()
-        ctx.setTransform(1, 0, 0, 1, 0, 0)
-    }
-
-    static drawText(
+    private static drawRoundedTrapezoidPath(
         ctx: CanvasRenderingContext2D,
-        elapsed: number,
-        pText: string,
-        hText: string,
-        cText: string,
+        x: number, y: number,
+        bottomWidth: number, topWidth: number,
+        height: number, radius: number
     ) {
-        if (elapsed < 1750) return
-        ctx.fillStyle = "white"
-        ctx.letterSpacing = "0px"
-        ctx.font = "900 150px roboto"
-        const pMetrics = ctx.measureText(pText)
-        const hMetrics = ctx.measureText(hText)
-        const phWidth = pMetrics.width + hMetrics.width + 60
-        let pStartX = 960 - phWidth / 2
+        const p2 = { x: x + bottomWidth, y: y }
+        const p3 = { x: x + (bottomWidth + topWidth) / 2, y: y - height }
+        const p4 = { x: x + (bottomWidth - topWidth) / 2, y: y - height }
+        // order: bottom-left > bottom-right > top-right > top-left
+        ctx.moveTo(x + radius, y)
+        ctx.arcTo(p2.x, p2.y, p3.x, p3.y, radius)
+        ctx.arcTo(p3.x, p3.y, p4.x, p4.y, radius)
+        ctx.arcTo(p4.x, p4.y, x, y, radius)
+        ctx.arcTo(x, y, p2.x, p2.y, radius)
+    }
+
+    static drawLaptopBase(ctx: CanvasRenderingContext2D, y: number, elapsed: number) {
+        const ellipseRx = 27
+        const ellipseRy = 32 // thickness
+        const startX = 656 // top-left
+        const endX = 1263 // top-right
+        ctx.save()
+        if (elapsed > 1060) {
+            const disappearProgress = (elapsed - 1060) / (1200 - 1060)
+            const width = (endX - startX) * (1 - disappearProgress)
+            ctx.beginPath()
+            ctx.rect(1920 / 2 - width / 2, 0, width, 1080)
+            ctx.clip()
+        }
+        ctx.beginPath()
+        // order: top-left > top-right > (1/4 ellipse down) > bottom-right >
+        // bottom-left > (1/4 ellipse up) > top-left
+        ctx.moveTo(startX, y)
+        ctx.lineTo(endX, y)
+        ctx.ellipse(endX - ellipseRx, y, ellipseRx, ellipseRy, 0, 0, Math.PI / 2)
+        ctx.lineTo(startX + ellipseRx, y + ellipseRy)
+        ctx.ellipse(startX + ellipseRx, y, ellipseRx, ellipseRy, 0, Math.PI / 2, Math.PI)
+        ctx.fillStyle = this.ThemeColor
+        ctx.fill()
+        ctx.restore()
+    }
+
+    static drawUploadButton(ctx: CanvasRenderingContext2D, elapsed: number) {
+        if (elapsed < 670 || elapsed >= 1170) return
+        ctx.save()
+        ctx.beginPath()
+        ctx.rect(0, 0, 1920, elapsed < 1040 ? 582 : 606)
+        ctx.clip() // There's a gap between the screen frame and the "upload button"
+
+        this.drawUploadCircle(ctx, elapsed)
+
+        if (elapsed > 750) {
+            const riseProgress = Math.min(1, (elapsed - 750) / (1120 - 750))
+            const arrowTop = 556 - (556 - 451) * easeOutQuad(riseProgress)
+            const triangleHeight = 522 - 458
+            this.drawTrianglePath(ctx, 945, arrowTop, (945 - 880) * 2, triangleHeight)
+            ctx.fillStyle = "black"
+            ctx.fill()
+
+            const gapProgress = Math.max(0, (elapsed - 1040) / (1170 - 1040)) ** 2
+            const rectGap = gapProgress * 80 // The rect starts to leave the circle somehow
+            ctx.beginPath()
+            ctx.rect(916, arrowTop + triangleHeight + rectGap, 971 - 916, 200)
+            ctx.fill()
+        }
+        
+        ctx.restore()
+    }
+
+    private static drawUploadCircle(ctx: CanvasRenderingContext2D, elapsed: number) {
+        const riseProgress = Math.min((elapsed - 670) / 160, 1)
+        const fallProgress = Math.max(0, (elapsed - 1040) / (1160 - 1040))
+        ctx.beginPath()
+        // (1039 - 854) - (1012 - 878) = 51
+        ctx.arc(
+            (1012 + 878) / 2, 600 - easeOutQuad(riseProgress) * 140 + fallProgress * 55,
+            ((1012 - 878) + 51 * easeOutCubic(riseProgress)) / 2,
+            0, 2 * Math.PI
+        )
+        ctx.fillStyle = this.ThemeColor
+        ctx.fill()
+    }
+
+    static drawPlayButton(ctx: CanvasRenderingContext2D, elapsed: number) {
+        if (elapsed < 1170 || elapsed >= 1750) return
+        this.drawPlayCircle(ctx, elapsed)
+        this.drawPlayTrianglePath(ctx, elapsed)
+        if (elapsed >= 1290) PHCanvas.drawCursor(ctx, elapsed)
+    }
+
+    private static drawPlayCircle(ctx: CanvasRenderingContext2D, elapsed: number) {
+        const x = (1012 + 878) / 2 // See `drawUploadCircle()`
+        const riseProgress = Math.min(1, (elapsed - 1170) / (1220 - 1170))
+        const fallProgress = Math.max(0, Math.min(1, (elapsed - 1220) / (1300 - 1220)))
+        const y = 515 - (515 - (627 + 369) / 2 + 10) * riseProgress + 10 * fallProgress
+        ctx.beginPath()
+        const outerRadiusProgress = Math.min(1, (elapsed - 1180) / (1220 - 1180))
+        const outerDiameter = 185 + ((627 - 369) - 185) * outerRadiusProgress
+        ctx.arc(x, y, outerDiameter / 2, 0, 2 * Math.PI)
+        const innerRadiusProgress = Math.min(1, (elapsed - 1170) / (1330 - 1170))
+        const innerDiameter = (627 - 369 - 7 * 2) * easeOutQuad(innerRadiusProgress)
+        ctx.arc(x, y, innerDiameter / 2, 0, 2 * Math.PI)
+        ctx.fillStyle = this.ThemeColor
+        ctx.fill("evenodd")
+    }
+
+    private static drawPlayTrianglePath(ctx: CanvasRenderingContext2D, elapsed: number) {
+        const progress1 = Math.min(1, (elapsed - 1170) / (1340 - 1170))
+        let rotateProgress = easeOutQuad(progress1) * 1.06
+        if (elapsed > 1340) {
+            rotateProgress -= Math.min(1, (elapsed - 1340) / (1380 - 1340)) * 0.06
+        }
+        const rotateCenter = { x: 952, y: 506 }
+        ctx.translate(rotateCenter.x, rotateCenter.y)
+        ctx.rotate(rotateProgress * Math.PI / 2)
+        ctx.translate(-rotateCenter.x, -rotateCenter.y)
+        const width = (1008 - 880) + ((560 - 434) - (1008 - 880)) * progress1
+        const height = (516 - 451) + ((1008 - 905) - (516 - 451)) * easeOutQuad(progress1)
+        this.drawTrianglePath(ctx, 944, 451, width, height)
+        if (elapsed < 1250) {
+            ctx.fillStyle = "black"
+        } else {
+            ctx.fillStyle = this.ThemeColor
+        }
+        ctx.fill()
+        ctx.setTransform({})
+    }
+
+    static drawCursor(ctx: CanvasRenderingContext2D, elapsed: number) {
+        const progress = Math.min(1, (elapsed - 1290) / (1600 - 1290))
+        ctx.translate(easeInOutSine(progress) * -115, easeInOutSine(progress) * -115)
+        ctx.beginPath()
+        // Clockwise order
+        ctx.moveTo(1062, 618)
+        ctx.lineTo(1123, 618)
+        ctx.lineTo(1106, 636)
+        ctx.lineTo(1146, 677)
+        ctx.lineTo(1121, 701)
+        ctx.lineTo(1081, 661)
+        ctx.lineTo(1062, 678)
+        ctx.closePath()
+        ctx.fillStyle = "black"
+        ctx.fill()
+        ctx.strokeStyle = PHCanvas.ThemeColor
+        ctx.lineWidth = 4
+        ctx.stroke()
+        ctx.setTransform({})
+    }
+
+    static tmc: TextMetricsCache
+
+    static measureText(ctx: CanvasRenderingContext2D, pText: string, hText: string, cText: string) {
+        ctx.letterSpacing = "6px"
+        ctx.font = "900 210px roboto"
+        const pA = ctx.measureText(pText)
+        const pS: TextMetrics[] = []
         for (let i = 0; i < pText.length; i++) {
-            const charStartTime = i * (200 / pText.length) + 1750
-            if (charStartTime > elapsed) continue
-            const charProgress = Math.min((elapsed - charStartTime) / 100, 1)
-            const charMetrics = ctx.measureText(pText[i])
-            const charWidth = charMetrics.width
-            const gradient = ctx.createLinearGradient(pStartX, 500, pStartX + charWidth, 500)
-            gradient.addColorStop(0, "white")
-            gradient.addColorStop(Math.max(charProgress - 0.05, 0), "white")
-            gradient.addColorStop(charProgress, PHCanvas.ThemeColor)
-            gradient.addColorStop(Math.min(charProgress + 0.2, 1), PHCanvas.ThemeColor)
-            gradient.addColorStop(Math.min(charProgress + 0.25, 1), "black")
-            gradient.addColorStop(1, "black")
-            ctx.fillStyle = gradient
-            ctx.fillText(pText[i], pStartX, 500)
+            pS.push(ctx.measureText(pText[i]))
+        }
+        ctx.letterSpacing = "0px"
+        const hA = ctx.measureText(hText)
+        ctx.font = "80px roboto"
+        const cA = ctx.measureText(cText)
+        const cS: TextMetrics[] = []
+        for (let i = 0; i < cText.length; i++) {
+            cS.push(ctx.measureText(cText[i]))
+        }
+        this.tmc = {
+            pT: pText,
+            hT: hText,
+            cT: cText,
+            pMA: pA,
+            hMA: hA,
+            cMA: cA,
+            pMS: pS,
+            cMS: cS,
+            pF: "900 225px roboto",
+            hF: "900 210px roboto",
+            cF: "600 95px roboto"
+        }
+    }
+
+    static drawText(ctx: CanvasRenderingContext2D, elapsed: number) {
+        if (elapsed < 1750) return
+        ctx.letterSpacing = "6px"
+        ctx.textBaseline = "middle"
+        ctx.font = this.tmc.pF
+        const pEndSpace = 25
+        const hHorizPad = 30 // hText horizontal padding
+        const phWidth = this.tmc.pMA.width + this.tmc.hMA.width + pEndSpace + 2 * hHorizPad
+        let pStartX = 960 - phWidth / 2
+        const pY = 490
+        for (let i = 0; i < this.tmc.pT.length; i++) {
+            const charStartTime = i * (200 / this.tmc.pT.length) + 1750
+            if (elapsed < charStartTime) break
+            const progress1 = Math.min((elapsed - charStartTime) / 80, 1)
+            const progress2 = Math.max(Math.min((elapsed - (charStartTime + 20)) / 80, 1), 0)
+            const metrics = this.tmc.pMS[i]
+            const charWidth = metrics.width
+            const centerX = pStartX + metrics.width / 2
+            const drawSingle = function (progress: number, color: string) {
+                ctx.save()
+                ctx.beginPath()
+                ctx.moveTo(centerX, pY)
+                ctx.lineTo(centerX, pY + 200)
+                ctx.arc(centerX, pY, 200, Math.PI / 2, Math.PI / 2 + progress * Math.PI * 2)
+                ctx.closePath()
+                ctx.clip()
+                ctx.fillStyle = color
+                ctx.fillText(PHCanvas.tmc.pT[i], pStartX, pY)
+                ctx.restore()
+            }
+            drawSingle(progress1, this.ThemeColor)
+            drawSingle(progress2, this.WhiteThemeColor)
             pStartX += charWidth
         }
-        if (elapsed >= 2010) {
-            const hTextStartX = 960 - phWidth / 2 + pMetrics.width + 40
-            const hCenterX = hTextStartX + hMetrics.width / 2
-            const hProgress = Math.min((elapsed - 2010) / 200, 1)
+
+        ctx.letterSpacing = "0px"
+        ctx.font = this.tmc.hF
+        const hBlockHeight = 611 - 364
+        if (elapsed >= 2000) {
+            const hTextStartX = 960 - phWidth / 2 + this.tmc.pMA.width + pEndSpace + hHorizPad
+            const hCenterX = hTextStartX + this.tmc.hMA.width / 2
+            const rotateProgress = Math.min((elapsed - 2000) / (2180 - 2000), 1)
+            let scaleProgress = easeOutQuad(Math.min((elapsed - 2000) / (2100 - 2000), 1)) * 1.1
+            if (elapsed > 2100) {
+                scaleProgress -= Math.min((elapsed - 2100) / (2160 - 2000), 1) * 0.1
+            }
             ctx.translate(hCenterX, 445)
-            ctx.rotate((-40 + 40 * hProgress) * Math.PI / 180)
-            ctx.scale(0.6 + 0.4 * hProgress, 0.6 + 0.4 * hProgress)
+            ctx.rotate((-40 + 40 * easeOutQuad(rotateProgress)) * Math.PI / 180)
+            ctx.scale(0.6 + 0.4 * scaleProgress, 0.6 + 0.4 * scaleProgress)
             ctx.fillStyle = PHCanvas.ThemeColor
             ctx.beginPath()
-            ctx.roundRect(-hMetrics.width / 2 - 20, -80, hMetrics.width + 40, 160, 10)
+            ctx.roundRect(
+                -this.tmc.hMA.width / 2 - hHorizPad, -hBlockHeight / 2 + 40,
+                this.tmc.hMA.width + hHorizPad * 2 - 10, hBlockHeight,
+                15
+            )
             ctx.fill()
             ctx.fillStyle = "black"
-            ctx.fillText(hText, -hMetrics.width / 2, 55)
-            ctx.setTransform(1, 0, 0, 1, 0, 0)
+            ctx.fillText(this.tmc.hT, -this.tmc.hMA.width / 2, 55)
+            ctx.setTransform({})
         }
-        ctx.fillStyle = "white"
-        ctx.font = "60px roboto"
-        const cMetrics = ctx.measureText(cText)
-        const cCharSpacing = (phWidth - cMetrics.width) / (cText.length - 1)
+
+        ctx.fillStyle = this.WhiteThemeColor
+        ctx.font = this.tmc.cF
+        ctx.textBaseline = "bottom"
+        const cCharSpacing = (phWidth - 20 - this.tmc.cMA.width) / (this.tmc.cT.length - 1)
         if (elapsed >= 1850) { // until 2150
             let cStartX = 960 - phWidth / 2
-            for (let i = 0; i < cText.length; i++) {
-                const charStartTime = 1850 + i * (300 / cText.length)
-                if (charStartTime > elapsed) break
-                const charMetrics = ctx.measureText(cText[i])
-                const charProgress = Math.min((elapsed - charStartTime) / 130, 1)
-                const degree = (charProgress < 0.5 ? 40 : -20) + (charProgress < 0.5 ? charProgress * -60 : charProgress * 20)
-                ctx.translate(cStartX, 610)
+            for (let i = 0; i < this.tmc.cT.length; i++) {
+                const charStartTime = 1850 + i * (270 / this.tmc.cT.length)
+                if (elapsed < charStartTime) break
+                const metrics = this.tmc.cMS[i]
+                const progress = Math.min((elapsed - charStartTime) / 130, 1)
+                let degree = 0
+                if (progress < 0.5) {
+                    degree = 90 - easeOutQuad(progress * 2) * 100
+                } else {
+                    degree = -10 + ((progress - 0.5) * 2) * 10
+                }
                 ctx.save()
+                ctx.translate(cStartX, 745)
+                ctx.beginPath()
+                ctx.rect(-200, 0, 400, -200)
+                ctx.clip()
                 ctx.rotate(degree * Math.PI / 180)
-                ctx.fillText(cText[i], 0, 0)
+                ctx.fillText(this.tmc.cT[i], 0, 0)
                 ctx.restore()
-                ctx.clearRect(-5, charMetrics.fontBoundingBoxDescent, charMetrics.width + 20, 30)
-                ctx.setTransform(1, 0, 0, 1, 0, 0)
-                cStartX += charMetrics.width + cCharSpacing
+                cStartX += metrics.width + cCharSpacing
             }
         }
     }
+
+    private static drawTrianglePath(
+        ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number
+    ) {
+        ctx.beginPath()
+        ctx.moveTo(x, y)
+        ctx.lineTo(x + width / 2, y + height)
+        ctx.lineTo(x - width / 2, y + height)
+        ctx.closePath()
+    }
+
+    // Debug helper functions below
 
     static drawReferentialLines(ctx: CanvasRenderingContext2D) {
         ctx.lineWidth = 3
@@ -199,4 +395,34 @@ export default class PHCanvas {
     static drawTemplateImage(ctx: CanvasRenderingContext2D, image: ImageBitmap) {
         ctx.drawImage(image, 0, 0)
     }
+}
+
+interface TextMetricsCache {
+    // Text
+    pT: string
+    hT: string
+    cT: string
+    // Metrics (all)
+    pMA: TextMetrics
+    hMA: TextMetrics
+    cMA: TextMetrics
+    // Metrics (single)
+    pMS: TextMetrics[]
+    cMS: TextMetrics[]
+    // Font
+    pF: string
+    hF: string
+    cF: string
+}
+
+function easeInOutSine(x: number): number {
+    return -(Math.cos(Math.PI * x) - 1) / 2;
+}
+
+function easeOutCubic(x: number): number {
+    return 1 - Math.pow(1 - x, 3);
+}
+
+function easeOutQuad(x: number): number {
+    return 1 - Math.pow(1 - x, 2);
 }

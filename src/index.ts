@@ -3,9 +3,6 @@ import PHCanvas from "./canvas.ts"
 
 let progress = 0.0
 let debugMode = false
-let pText = "Porn"
-let hText = "hub"
-let cText = "community"
 
 const LENGTH = 74 * (1000 / 24) // 74 frames of intro in a 24fps video
 
@@ -31,6 +28,7 @@ class App extends HTMLElement {
         this.debugCheckbox.addEventListener("change", async () => {
             debugMode = this.debugCheckbox.checked
             PHCanvas.ThemeColor = debugMode ? "#3aff0091" : PHCanvas.PhOrange
+            PHCanvas.WhiteThemeColor = debugMode ? "#ff000091" : "white"
             if (debugMode && App.templateImages.length == 0) {
                 await this.loadTemplateImages()
             }
@@ -41,6 +39,7 @@ class App extends HTMLElement {
             App.drawFrame(this.ctx, progress)
             this.updateProgressText(progress)
         })
+        PHCanvas.measureText(this.ctx, "Porn", "hub", "community")
     }
 
     updateProgressText(percent: number) {
@@ -57,10 +56,10 @@ class App extends HTMLElement {
             PHCanvas.drawReferentialLines(ctx)
         }
         PHCanvas.drawRec(ctx, elapsed)
-        PHCanvas.drawUploadCircle(ctx, elapsed)
+        PHCanvas.drawUploadButton(ctx, elapsed)
         PHCanvas.drawLaptop(ctx, elapsed)
-        PHCanvas.drawPlayCircle(ctx, elapsed)
-        PHCanvas.drawText(ctx, elapsed, pText, hText, cText)
+        PHCanvas.drawPlayButton(ctx, elapsed)
+        PHCanvas.drawText(ctx, elapsed)
     }
 
     startAnimation(ctx: CanvasRenderingContext2D) {
