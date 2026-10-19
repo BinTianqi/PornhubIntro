@@ -26,7 +26,7 @@ export default class PHCanvas {
             const progress = (elapsed - 580) / (620 - 580)
             y = 767 - 135 * progress
         } else if (elapsed < 920) {
-            const progress = Math.min(1, (elapsed - 620) / (760 - 620))
+            const progress = clamp01((elapsed - 620) / (760 - 620))
             y = (767 - 135) - ((767 - 135) - 616) * easeOutCubic(progress)
         } else {
             const progress = (elapsed - 920) / (1200 - 920)
@@ -53,7 +53,7 @@ export default class PHCanvas {
         } else {
             const finalWidth = 1191 - 727
             const finalHeight = 616 - 333
-            const progress = Math.min(1, (elapsed - 680) / (800 - 680))
+            const progress = clamp01((elapsed - 680) / (800 - 680))
             topWidth = width - (width - finalWidth) * progress
             height = maxHeight - (maxHeight - finalHeight) * progress
         }
@@ -136,14 +136,14 @@ export default class PHCanvas {
         this.drawUploadCircle(ctx, elapsed)
 
         if (elapsed > 750) {
-            const riseProgress = Math.min(1, (elapsed - 750) / (1120 - 750))
+            const riseProgress = clamp01((elapsed - 750) / (1120 - 750))
             const arrowTop = 556 - (556 - 451) * easeOutQuad(riseProgress)
             const triangleHeight = 522 - 458
             this.drawTrianglePath(ctx, 945, arrowTop, (945 - 880) * 2, triangleHeight)
             ctx.fillStyle = "black"
             ctx.fill()
 
-            const gapProgress = Math.max(0, (elapsed - 1040) / (1170 - 1040)) ** 2
+            const gapProgress = clamp01((elapsed - 1040) / (1170 - 1040)) ** 2
             const rectGap = gapProgress * 80 // The rect starts to leave the circle somehow
             ctx.beginPath()
             ctx.rect(916, arrowTop + triangleHeight + rectGap, 971 - 916, 200)
@@ -154,8 +154,8 @@ export default class PHCanvas {
     }
 
     private static drawUploadCircle(ctx: CanvasRenderingContext2D, elapsed: number) {
-        const riseProgress = Math.min((elapsed - 670) / 160, 1)
-        const fallProgress = Math.max(0, (elapsed - 1040) / (1160 - 1040))
+        const riseProgress = clamp01((elapsed - 670) / 160)
+        const fallProgress = clamp01((elapsed - 1040) / (1160 - 1040))
         ctx.beginPath()
         // (1039 - 854) - (1012 - 878) = 51
         ctx.arc(
@@ -176,14 +176,14 @@ export default class PHCanvas {
 
     private static drawPlayCircle(ctx: CanvasRenderingContext2D, elapsed: number) {
         const x = (1012 + 878) / 2 // See `drawUploadCircle()`
-        const riseProgress = Math.min(1, (elapsed - 1170) / (1220 - 1170))
-        const fallProgress = Math.max(0, Math.min(1, (elapsed - 1220) / (1300 - 1220)))
+        const riseProgress = clamp01((elapsed - 1170) / (1220 - 1170))
+        const fallProgress = clamp01((elapsed - 1220) / (1300 - 1220))
         const y = 515 - (515 - (627 + 369) / 2 + 10) * riseProgress + 10 * fallProgress
         ctx.beginPath()
-        const outerRadiusProgress = Math.min(1, (elapsed - 1180) / (1220 - 1180))
+        const outerRadiusProgress = clamp01((elapsed - 1180) / (1220 - 1180))
         const outerDiameter = 185 + ((627 - 369) - 185) * outerRadiusProgress
         ctx.arc(x, y, outerDiameter / 2, 0, 2 * Math.PI)
-        const innerRadiusProgress = Math.min(1, (elapsed - 1170) / (1330 - 1170))
+        const innerRadiusProgress = clamp01((elapsed - 1170) / (1330 - 1170))
         const innerDiameter = (627 - 369 - 7 * 2) * easeOutQuad(innerRadiusProgress)
         ctx.arc(x, y, innerDiameter / 2, 0, 2 * Math.PI)
         ctx.fillStyle = this.ThemeColor
@@ -191,10 +191,10 @@ export default class PHCanvas {
     }
 
     private static drawPlayTrianglePath(ctx: CanvasRenderingContext2D, elapsed: number) {
-        const progress1 = Math.min(1, (elapsed - 1170) / (1340 - 1170))
+        const progress1 = clamp01((elapsed - 1170) / (1340 - 1170))
         let rotateProgress = easeOutQuad(progress1) * 1.06
         if (elapsed > 1340) {
-            rotateProgress -= Math.min(1, (elapsed - 1340) / (1380 - 1340)) * 0.06
+            rotateProgress -= clamp01((elapsed - 1340) / (1380 - 1340)) * 0.06
         }
         const rotateCenter = { x: 952, y: 506 }
         ctx.translate(rotateCenter.x, rotateCenter.y)
@@ -213,7 +213,7 @@ export default class PHCanvas {
     }
 
     static drawCursor(ctx: CanvasRenderingContext2D, elapsed: number) {
-        const progress = Math.min(1, (elapsed - 1290) / (1600 - 1290))
+        const progress = clamp01((elapsed - 1290) / (1600 - 1290))
         ctx.translate(easeInOutSine(progress) * -115, easeInOutSine(progress) * -115)
         ctx.beginPath()
         // Clockwise order
@@ -279,8 +279,8 @@ export default class PHCanvas {
         for (let i = 0; i < this.tmc.pT.length; i++) {
             const charStartTime = i * (200 / this.tmc.pT.length) + 1750
             if (elapsed < charStartTime) break
-            const progress1 = Math.min((elapsed - charStartTime) / 80, 1)
-            const progress2 = Math.max(Math.min((elapsed - (charStartTime + 20)) / 80, 1), 0)
+            const progress1 = clamp01((elapsed - charStartTime) / 80)
+            const progress2 = clamp01((elapsed - (charStartTime + 20)) / 80)
             const metrics = this.tmc.pMS[i]
             const charWidth = metrics.width
             const centerX = pStartX + metrics.width / 2
@@ -307,10 +307,10 @@ export default class PHCanvas {
         if (elapsed >= 2000) {
             const hTextStartX = 960 - phWidth / 2 + this.tmc.pMA.width + pEndSpace + hHorizPad
             const hCenterX = hTextStartX + this.tmc.hMA.width / 2
-            const rotateProgress = Math.min((elapsed - 2000) / (2180 - 2000), 1)
-            let scaleProgress = easeOutQuad(Math.min((elapsed - 2000) / (2100 - 2000), 1)) * 1.1
+            const rotateProgress = clamp01((elapsed - 2000) / (2180 - 2000))
+            let scaleProgress = easeOutQuad(clamp01((elapsed - 2000) / (2100 - 2000))) * 1.1
             if (elapsed > 2100) {
-                scaleProgress -= Math.min((elapsed - 2100) / (2160 - 2000), 1) * 0.1
+                scaleProgress -= clamp01((elapsed - 2100) / (2160 - 2000)) * 0.1
             }
             ctx.translate(hCenterX, 445)
             ctx.rotate((-40 + 40 * easeOutQuad(rotateProgress)) * Math.PI / 180)
@@ -338,7 +338,7 @@ export default class PHCanvas {
                 const charStartTime = 1850 + i * (270 / this.tmc.cT.length)
                 if (elapsed < charStartTime) break
                 const metrics = this.tmc.cMS[i]
-                const progress = Math.min((elapsed - charStartTime) / 130, 1)
+                const progress = clamp01((elapsed - charStartTime) / 130)
                 let degree = 0
                 if (progress < 0.5) {
                     degree = 90 - easeOutQuad(progress * 2) * 100
@@ -425,4 +425,8 @@ function easeOutCubic(x: number): number {
 
 function easeOutQuad(x: number): number {
     return 1 - Math.pow(1 - x, 2);
+}
+
+function clamp01(value: number): number {
+    return Math.min(Math.max(value, 0), 1)
 }
