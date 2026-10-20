@@ -6,11 +6,13 @@
     "trailingCommas": "onlyMultiLine"
   },
   "tasks": {
+    "build": "deno run --allow-all npm:vite build src",
     "dev": "deno run --allow-all npm:vite src"
   },
   "nodeModulesDir": "auto",
   "imports": {
     "@deno/vite-plugin": "npm:@deno/vite-plugin@^2.0.3",
+    "mediabunny": "npm:mediabunny@^1.61.6",
     "vite": "npm:vite@^8.2.2"
   },
   "compilerOptions": {

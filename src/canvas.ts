@@ -1,12 +1,37 @@
-export default class PHCanvas {
-    static PhOrange = "#FF9900"
-    /** Default to that orange color, will change when debug mode is activated */
-    static ThemeColor = this.PhOrange
-    static WhiteThemeColor = "white"
+type CanvasContext = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D
 
-    static drawRec(ctx: CanvasRenderingContext2D, elapsed: number) {
+export default class PHCanvasDrawer {
+    static readonly PhOrange = "#FF9900"
+    /** Default to that orange color, will change when debug mode is activated */
+    ThemeColor = PHCanvasDrawer.PhOrange
+    WhiteThemeColor = "white"
+
+
+    static readonly LENGTH = 74 * (1000 / 24) // 74 frames of intro in a 24fps video
+
+    constructor(private ctx: CanvasContext, pText: string, hText: string, cText: string) {
+        this.measureText(ctx, pText, hText, cText)
+    }
+
+    drawFrame(percent: number, debug: boolean, debugTemplateImages: ImageBitmap[] | null) {
+        const elapsed = percent * PHCanvasDrawer.LENGTH
+        const ctx = this.ctx
+        ctx.clearRect(0, 0, 1920, 1080)
+        if (debug) {
+            const img = debugTemplateImages![Math.floor(74 * percent)]
+            this.drawTemplateImage(ctx, img)
+            this.drawReferentialLines(ctx)
+        }
+        this.drawRec(ctx, elapsed)
+        this.drawUploadButton(ctx, elapsed)
+        this.drawLaptop(ctx, elapsed)
+        this.drawPlayButton(ctx, elapsed)
+        this.drawText(ctx, elapsed)
+    }
+
+    drawRec(ctx: CanvasContext, elapsed: number) {
         if (elapsed >= 580) return
-        ctx.fillStyle = PHCanvas.ThemeColor
+        ctx.fillStyle = this.ThemeColor
         const fallProgress = (elapsed < 420 ? 0 : (elapsed - 420) / (580 - 420)) ** 3
         if ((elapsed >= 90 && elapsed < 300) || (elapsed >= 420 && elapsed < 580)) {
             ctx.beginPath()
@@ -19,7 +44,7 @@ export default class PHCanvas {
         ctx.fillText("REC", 890, 550 + fallProgress * 190)
     }
 
-    static drawLaptop(ctx: CanvasRenderingContext2D, elapsed: number) {
+    drawLaptop(ctx: CanvasContext, elapsed: number) {
         if (elapsed < 580 || elapsed >= 1200) return
         let y = 616 // top of the laptop base
         if (elapsed < 620) {
@@ -36,7 +61,7 @@ export default class PHCanvas {
         this.drawLaptopScreenFrame(ctx, y - 10, elapsed)
     }
 
-    static drawLaptopScreenFrame(ctx: CanvasRenderingContext2D, y: number, elapsed: number) {
+    drawLaptopScreenFrame(ctx: CanvasContext, y: number, elapsed: number) {
         if (elapsed < 620) return
         const outerRadius = 22
         const innerRadius = 5
@@ -83,8 +108,8 @@ export default class PHCanvas {
         ctx.restore()
     }
 
-    private static drawRoundedTrapezoidPath(
-        ctx: CanvasRenderingContext2D,
+    private drawRoundedTrapezoidPath(
+        ctx: CanvasContext,
         x: number, y: number,
         bottomWidth: number, topWidth: number,
         height: number, radius: number
@@ -100,7 +125,7 @@ export default class PHCanvas {
         ctx.arcTo(x, y, p2.x, p2.y, radius)
     }
 
-    static drawLaptopBase(ctx: CanvasRenderingContext2D, y: number, elapsed: number) {
+    drawLaptopBase(ctx: CanvasContext, y: number, elapsed: number) {
         const ellipseRx = 27
         const ellipseRy = 32 // thickness
         const startX = 656 // top-left
@@ -126,7 +151,7 @@ export default class PHCanvas {
         ctx.restore()
     }
 
-    static drawUploadButton(ctx: CanvasRenderingContext2D, elapsed: number) {
+    drawUploadButton(ctx: CanvasContext, elapsed: number) {
         if (elapsed < 670 || elapsed >= 1170) return
         ctx.save()
         ctx.beginPath()
@@ -153,7 +178,7 @@ export default class PHCanvas {
         ctx.restore()
     }
 
-    private static drawUploadCircle(ctx: CanvasRenderingContext2D, elapsed: number) {
+    private drawUploadCircle(ctx: CanvasContext, elapsed: number) {
         const riseProgress = clamp01((elapsed - 670) / 160)
         const fallProgress = clamp01((elapsed - 1040) / (1160 - 1040))
         ctx.beginPath()
@@ -167,14 +192,14 @@ export default class PHCanvas {
         ctx.fill()
     }
 
-    static drawPlayButton(ctx: CanvasRenderingContext2D, elapsed: number) {
+    drawPlayButton(ctx: CanvasContext, elapsed: number) {
         if (elapsed < 1170 || elapsed >= 1750) return
         this.drawPlayCircle(ctx, elapsed)
         this.drawPlayTrianglePath(ctx, elapsed)
-        if (elapsed >= 1290) PHCanvas.drawCursor(ctx, elapsed)
+        if (elapsed >= 1290) this.drawCursor(ctx, elapsed)
     }
 
-    private static drawPlayCircle(ctx: CanvasRenderingContext2D, elapsed: number) {
+    private drawPlayCircle(ctx: CanvasContext, elapsed: number) {
         const x = (1012 + 878) / 2 // See `drawUploadCircle()`
         const riseProgress = clamp01((elapsed - 1170) / (1220 - 1170))
         const fallProgress = clamp01((elapsed - 1220) / (1300 - 1220))
@@ -190,7 +215,7 @@ export default class PHCanvas {
         ctx.fill("evenodd")
     }
 
-    private static drawPlayTrianglePath(ctx: CanvasRenderingContext2D, elapsed: number) {
+    private drawPlayTrianglePath(ctx: CanvasContext, elapsed: number) {
         const progress1 = clamp01((elapsed - 1170) / (1340 - 1170))
         let rotateProgress = easeOutQuad(progress1) * 1.06
         if (elapsed > 1340) {
@@ -212,7 +237,7 @@ export default class PHCanvas {
         ctx.setTransform({})
     }
 
-    static drawCursor(ctx: CanvasRenderingContext2D, elapsed: number) {
+    drawCursor(ctx: CanvasContext, elapsed: number) {
         const progress = clamp01((elapsed - 1290) / (1600 - 1290))
         ctx.translate(easeInOutSine(progress) * -115, easeInOutSine(progress) * -115)
         ctx.beginPath()
@@ -227,15 +252,15 @@ export default class PHCanvas {
         ctx.closePath()
         ctx.fillStyle = "black"
         ctx.fill()
-        ctx.strokeStyle = PHCanvas.ThemeColor
+        ctx.strokeStyle = this.ThemeColor
         ctx.lineWidth = 4
         ctx.stroke()
         ctx.setTransform({})
     }
 
-    static tmc: TextMetricsCache
+    tmc!: TextMetricsCache
 
-    static measureText(ctx: CanvasRenderingContext2D, pText: string, hText: string, cText: string) {
+    measureText(ctx: CanvasContext, pText: string, hText: string, cText: string) {
         ctx.letterSpacing = "6px"
         ctx.font = "900 210px roboto"
         const pA = ctx.measureText(pText)
@@ -266,7 +291,7 @@ export default class PHCanvas {
         }
     }
 
-    static drawText(ctx: CanvasRenderingContext2D, elapsed: number) {
+    drawText(ctx: CanvasContext, elapsed: number) {
         if (elapsed < 1750) return
         ctx.letterSpacing = "6px"
         ctx.textBaseline = "middle"
@@ -284,6 +309,7 @@ export default class PHCanvas {
             const metrics = this.tmc.pMS[i]
             const charWidth = metrics.width
             const centerX = pStartX + metrics.width / 2
+            const thisCls = this
             const drawSingle = function (progress: number, color: string) {
                 ctx.save()
                 ctx.beginPath()
@@ -293,7 +319,7 @@ export default class PHCanvas {
                 ctx.closePath()
                 ctx.clip()
                 ctx.fillStyle = color
-                ctx.fillText(PHCanvas.tmc.pT[i], pStartX, pY)
+                ctx.fillText(thisCls.tmc.pT[i], pStartX, pY)
                 ctx.restore()
             }
             drawSingle(progress1, this.ThemeColor)
@@ -315,7 +341,7 @@ export default class PHCanvas {
             ctx.translate(hCenterX, 445)
             ctx.rotate((-40 + 40 * easeOutQuad(rotateProgress)) * Math.PI / 180)
             ctx.scale(0.6 + 0.4 * scaleProgress, 0.6 + 0.4 * scaleProgress)
-            ctx.fillStyle = PHCanvas.ThemeColor
+            ctx.fillStyle = this.ThemeColor
             ctx.beginPath()
             ctx.roundRect(
                 -this.tmc.hMA.width / 2 - hHorizPad, -hBlockHeight / 2 + 40,
@@ -358,8 +384,8 @@ export default class PHCanvas {
         }
     }
 
-    private static drawTrianglePath(
-        ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number
+    private drawTrianglePath(
+        ctx: CanvasContext, x: number, y: number, width: number, height: number
     ) {
         ctx.beginPath()
         ctx.moveTo(x, y)
@@ -370,7 +396,7 @@ export default class PHCanvas {
 
     // Debug helper functions below
 
-    static drawReferentialLines(ctx: CanvasRenderingContext2D) {
+    drawReferentialLines(ctx: CanvasContext) {
         ctx.lineWidth = 3
         ctx.strokeStyle = "white"
         ctx.beginPath()
@@ -392,7 +418,7 @@ export default class PHCanvas {
         ctx.stroke()
     }
 
-    static drawTemplateImage(ctx: CanvasRenderingContext2D, image: ImageBitmap) {
+    drawTemplateImage(ctx: CanvasContext, image: ImageBitmap) {
         ctx.drawImage(image, 0, 0)
     }
 }

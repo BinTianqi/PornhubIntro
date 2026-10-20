@@ -1,15 +1,15 @@
 import "./index.css"
-import PHCanvas from "./canvas.ts"
+import PHCanvasDrawer from "./canvas.ts"
+import soundUrl from "./sound.aac"
+import { render } from "./renderer.ts"
 
 const DEBUG = false // Do not submit with true
 
 let progress = 0.0
 let debugMode = false
 
-const LENGTH = 74 * (1000 / 24) // 74 frames of intro in a 24fps video
-
 class App extends HTMLElement {
-    audio = this.querySelector("audio")!
+    audio = new Audio(soundUrl)
     canvas = this.querySelector("canvas")!
     ctx = this.canvas.getContext("2d")!
     slider = this.querySelector("input.slider") as HTMLInputElement
@@ -25,6 +25,8 @@ class App extends HTMLElement {
     cTextInput = this.customTextDiv.querySelector("input.c-text") as HTMLInputElement
     debugCheckbox = this.querySelector("#debug-checkbox") as HTMLInputElement
 
+    drawer = new PHCanvasDrawer(this.ctx, "Porn", "hub", "community")
+    //renderer = new Worker(new URL("renderer.ts", import.meta.url))
     animPlaying = false
     animId = 0
 
@@ -37,7 +39,7 @@ class App extends HTMLElement {
                 this.startButton.disabled = true
                 this.audio.currentTime = 0
                 await this.audio.play()
-                this.startAnimation(this.ctx)
+                this.startAnimation()
                 this.startButton.disabled = false
             }
             this.updatePlayButton(!this.animPlaying)
@@ -47,37 +49,36 @@ class App extends HTMLElement {
         })
         if (DEBUG) this.debugCheckbox.addEventListener("change", async () => {
             debugMode = this.debugCheckbox.checked
-            PHCanvas.ThemeColor = debugMode ? "#3aff0091" : PHCanvas.PhOrange
-            PHCanvas.WhiteThemeColor = debugMode ? "#ff000091" : "white"
-            if (debugMode && App.templateImages.length == 0) {
+            this.drawer.ThemeColor = debugMode ? "#3aff0091" : PHCanvasDrawer.PhOrange
+            this.drawer.WhiteThemeColor = debugMode ? "#ff000091" : "white"
+            if (debugMode && this.templateImages.length == 0) {
                 await this.loadTemplateImages()
             }
-            App.drawFrame(this.ctx, progress)
+            this.drawFrame(progress)
         })
         this.slider.addEventListener("input", () => {
             progress = this.slider.valueAsNumber / App.SliderMax
-            App.drawFrame(this.ctx, progress)
+            this.drawFrame(progress)
             this.updateProgressText(progress)
         })
         this.customTextDiv.addEventListener("input", () => {
-            PHCanvas.measureText(
+            this.drawer.measureText(
                 this.ctx, this.pTextInput.value, this.hTextInput.value, this.cTextInput.value
             )
             if (!this.animPlaying) {
                 progress = 0.9
-                App.drawFrame(this.ctx, progress)
+                this.drawFrame(progress)
                 this.updateProgressText(progress)
                 this.slider.valueAsNumber = App.SliderMax * progress
             }
         })
-        PHCanvas.measureText(this.ctx, "Porn", "hub", "community")
-        App.drawFrame(this.ctx, 0)
+        this.drawFrame(0)
         if (DEBUG) this.querySelector("div.debug")!.classList.remove("hidden")
     }
 
     updateProgressText(percent: number) {
         this.progressPercent.textContent = percent.toFixed(4).toString()
-        this.progressTime.textContent = Math.round(LENGTH * percent).toString() + "ms"
+        this.progressTime.textContent = Math.round(PHCanvasDrawer.LENGTH * percent).toString() + "ms"
     }
 
     updatePlayButton(playing: boolean) {
@@ -85,31 +86,20 @@ class App extends HTMLElement {
         this.animPlaying = playing
     }
 
-    static drawFrame(ctx: CanvasRenderingContext2D, percent: number) {
-        const elapsed = LENGTH * percent
-        ctx.clearRect(0, 0, 1920, 1080)
-        if (DEBUG && debugMode) {
-            const img = this.templateImages[Math.floor(74 * percent)]
-            PHCanvas.drawTemplateImage(ctx, img)
-            PHCanvas.drawReferentialLines(ctx)
-        }
-        PHCanvas.drawRec(ctx, elapsed)
-        PHCanvas.drawUploadButton(ctx, elapsed)
-        PHCanvas.drawLaptop(ctx, elapsed)
-        PHCanvas.drawPlayButton(ctx, elapsed)
-        PHCanvas.drawText(ctx, elapsed)
+    drawFrame(percent: number) {
+        this.drawer.drawFrame(percent, DEBUG && debugMode, this.templateImages)
     }
 
-    startAnimation(ctx: CanvasRenderingContext2D) {
+    startAnimation() {
         let startTime = 0
         // Make an alias because we can't use `this` in the lambda function below
         const cls = this
         this.animId = requestAnimationFrame(function frame(timestamp: number) {
             if (startTime == 0) startTime = timestamp
-            progress = Math.min((timestamp - startTime) / LENGTH, 1)
+            progress = Math.min((timestamp - startTime) / PHCanvasDrawer.LENGTH, 1)
             cls.updateProgressText(progress)
             cls.slider.valueAsNumber = progress * App.SliderMax
-            App.drawFrame(ctx, progress)
+            cls.drawFrame(progress)
             if (progress < 1) {
                 cls.animId = requestAnimationFrame(frame)
             } else {
@@ -118,25 +108,15 @@ class App extends HTMLElement {
         })
     }
 
-    exportAnimation() {
-        const stream = this.canvas.captureStream(60)
-        const recorder = new MediaRecorder(stream, {})
-        recorder.addEventListener("dataavailable", (e) => {
-            const blob = e.data
-            const url = URL.createObjectURL(blob)
-            const a = document.createElement("a")
-            a.href = url
-            a.download = "phintro"
-            a.click()
-        })
-        recorder.start()
-        setTimeout(() => {
-            recorder.stop()
-        }, LENGTH)
-        this.startAnimation(this.ctx)
+    async exportAnimation() {
+        const a = document.createElement("a")
+        a.download = "ph-intro.mp4"
+        const blobUrl = await render()
+        a.href = blobUrl
+        a.click()
     }
 
-    static templateImages: ImageBitmap[] = []
+    templateImages: ImageBitmap[] = []
 
     async loadTemplateImages() {
         const promises: Promise<void>[] = []
@@ -146,7 +126,7 @@ class App extends HTMLElement {
                 .then((response) => response.blob())
                 .then((blob) => createImageBitmap(blob))
                 .then((image) => {
-                    App.templateImages[i - 1] = image
+                    this.templateImages[i - 1] = image
                 })
             promises.push(promise)
         }
