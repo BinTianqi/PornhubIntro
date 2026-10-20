@@ -5,15 +5,11 @@ import { render } from "./renderer.ts"
 
 const DEBUG = false // Do not submit with true
 
-let progress = 0.0
-let debugMode = false
-
 class App extends HTMLElement {
     audio = new Audio(soundUrl)
     canvas = this.querySelector("canvas")!
     ctx = this.canvas.getContext("2d")!
     slider = this.querySelector("input.slider") as HTMLInputElement
-    static SliderMax = 1000
     progressDiv = this.querySelector("div.progress")!
     progressPercent = this.progressDiv.querySelector(".percent")!
     progressTime = this.progressDiv.querySelector(".time")!
@@ -25,8 +21,9 @@ class App extends HTMLElement {
     cTextInput = this.customTextDiv.querySelector("input.c-text") as HTMLInputElement
     debugCheckbox = this.querySelector("#debug-checkbox") as HTMLInputElement
 
+    elapsed = 0
+    debugMode = false
     drawer = new PHCanvasDrawer(this.ctx, "Porn", "hub", "community")
-    //renderer = new Worker(new URL("renderer.ts", import.meta.url))
     animPlaying = false
     animId = 0
 
@@ -48,37 +45,40 @@ class App extends HTMLElement {
             this.exportAnimation()
         })
         if (DEBUG) this.debugCheckbox.addEventListener("change", async () => {
-            debugMode = this.debugCheckbox.checked
-            this.drawer.ThemeColor = debugMode ? "#3aff0091" : PHCanvasDrawer.PhOrange
-            this.drawer.WhiteThemeColor = debugMode ? "#ff000091" : "white"
-            if (debugMode && this.templateImages.length == 0) {
+            this.debugMode = this.debugCheckbox.checked
+            this.drawer.ThemeColor = this.debugMode ? "#3aff0091" : PHCanvasDrawer.PhOrange
+            this.drawer.WhiteThemeColor = this.debugMode ? "#ff000091" : "white"
+            if (this.debugMode && this.templateImages.length == 0) {
                 await this.loadTemplateImages()
             }
-            this.drawFrame(progress)
+            this.drawFrame()
         })
+        this.slider.max = PHCanvasDrawer.LENGTH.toString()
         this.slider.addEventListener("input", () => {
-            progress = this.slider.valueAsNumber / App.SliderMax
-            this.drawFrame(progress)
-            this.updateProgressText(progress)
+            if (!this.animPlaying) {
+                this.elapsed = this.slider.valueAsNumber
+                this.drawFrame()
+                this.updateProgressText()
+            }
         })
         this.customTextDiv.addEventListener("input", () => {
             this.drawer.measureText(
                 this.ctx, this.pTextInput.value, this.hTextInput.value, this.cTextInput.value
             )
             if (!this.animPlaying) {
-                progress = 0.9
-                this.drawFrame(progress)
-                this.updateProgressText(progress)
-                this.slider.valueAsNumber = App.SliderMax * progress
+                this.elapsed = 3000
+                this.drawFrame()
+                this.updateProgressText()
+                this.slider.valueAsNumber = this.elapsed
             }
         })
-        this.drawFrame(0)
+        this.drawFrame()
         if (DEBUG) this.querySelector("div.debug")!.classList.remove("hidden")
     }
 
-    updateProgressText(percent: number) {
-        this.progressPercent.textContent = percent.toFixed(4).toString()
-        this.progressTime.textContent = Math.round(PHCanvasDrawer.LENGTH * percent).toString() + "ms"
+    updateProgressText() {
+        this.progressPercent.textContent = (this.elapsed / PHCanvasDrawer.LENGTH).toFixed(4)
+        this.progressTime.textContent = `${this.elapsed}ms`
     }
 
     updatePlayButton(playing: boolean) {
@@ -86,32 +86,33 @@ class App extends HTMLElement {
         this.animPlaying = playing
     }
 
-    drawFrame(percent: number) {
-        this.drawer.drawFrame(percent, DEBUG && debugMode, this.templateImages)
+    drawFrame() {
+        this.drawer.drawFrame(this.elapsed, DEBUG && this.elapsed, this.templateImages)
     }
 
     startAnimation() {
         let startTime = 0
-        // Make an alias because we can't use `this` in the lambda function below
-        const cls = this
-        this.animId = requestAnimationFrame(function frame(timestamp: number) {
+        const animateFrame = (timestamp: number) => {
             if (startTime == 0) startTime = timestamp
-            progress = Math.min((timestamp - startTime) / PHCanvasDrawer.LENGTH, 1)
-            cls.updateProgressText(progress)
-            cls.slider.valueAsNumber = progress * App.SliderMax
-            cls.drawFrame(progress)
-            if (progress < 1) {
-                cls.animId = requestAnimationFrame(frame)
+            this.elapsed = Math.min(Math.round(timestamp - startTime), PHCanvasDrawer.LENGTH)
+            this.updateProgressText()
+            this.slider.valueAsNumber = this.elapsed
+            this.drawFrame()
+            if (this.elapsed < PHCanvasDrawer.LENGTH) {
+                this.animId = requestAnimationFrame(animateFrame)
             } else {
-                cls.updatePlayButton(false)
+                this.updatePlayButton(false)
             }
-        })
+        }
+        this.animId = requestAnimationFrame(animateFrame)
     }
 
     async exportAnimation() {
         const a = document.createElement("a")
-        a.download = "ph-intro.mp4"
-        const blobUrl = await render()
+        a.download = "pornhub-intro.mp4"
+        const blobUrl = await render(
+            this.pTextInput.value, this.hTextInput.value, this.cTextInput.value
+        )
         a.href = blobUrl
         a.click()
     }

@@ -2,11 +2,11 @@ import PHCanvasDrawer from "./canvas.ts"
 import * as M from "mediabunny"
 import soundUrl from "./sound.aac"
 
-export async function render() {
+export async function render(pText: string, hText: string, cText: string) {
     const startTime = performance.now()
     const audioUrl = new M.UrlSource(soundUrl)
     const audioInput = new M.Input({
-        formats: [new M.AdtsInputFormat()],
+        formats: [M.ADTS],
         source: audioUrl
     })
     const audioTrack = (await audioInput.getPrimaryAudioTrack())!
@@ -14,7 +14,7 @@ export async function render() {
 
     const canvas = new OffscreenCanvas(1920, 1080)
     const ctx = canvas.getContext("2d")!
-    const drawer = new PHCanvasDrawer(ctx, "Porn", "hub", "community")
+    const drawer = new PHCanvasDrawer(ctx, pText, hText, cText)
     const canvasSource = new M.CanvasSource(canvas, {
         codec: "avc",
         quality: new M.Quality("medium")
@@ -68,7 +68,3 @@ async function addAudioPackets(
         }
     }
 }
-
-/* onmessage = function (e) {
-    e.data
-} */

@@ -13,12 +13,11 @@ export default class PHCanvasDrawer {
         this.measureText(ctx, pText, hText, cText)
     }
 
-    drawFrame(percent: number, debug: boolean, debugTemplateImages: ImageBitmap[] | null) {
-        const elapsed = percent * PHCanvasDrawer.LENGTH
+    drawFrame(elapsed: number, debug: boolean, debugTemplateImages: ImageBitmap[] | null) {
         const ctx = this.ctx
         ctx.clearRect(0, 0, 1920, 1080)
         if (debug) {
-            const img = debugTemplateImages![Math.floor(74 * percent)]
+            const img = debugTemplateImages![Math.floor(elapsed / PHCanvasDrawer.LENGTH * 74)]
             this.drawTemplateImage(ctx, img)
             this.drawReferentialLines(ctx)
         }
@@ -309,8 +308,7 @@ export default class PHCanvasDrawer {
             const metrics = this.tmc.pMS[i]
             const charWidth = metrics.width
             const centerX = pStartX + metrics.width / 2
-            const thisCls = this
-            const drawSingle = function (progress: number, color: string) {
+            const drawSingle = (progress: number, color: string) => {
                 ctx.save()
                 ctx.beginPath()
                 ctx.moveTo(centerX, pY)
@@ -319,7 +317,7 @@ export default class PHCanvasDrawer {
                 ctx.closePath()
                 ctx.clip()
                 ctx.fillStyle = color
-                ctx.fillText(thisCls.tmc.pT[i], pStartX, pY)
+                ctx.fillText(this.tmc.pT[i], pStartX, pY)
                 ctx.restore()
             }
             drawSingle(progress1, this.ThemeColor)
