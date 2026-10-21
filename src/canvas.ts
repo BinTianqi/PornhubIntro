@@ -15,7 +15,8 @@ export default class PHCanvasDrawer {
 
     drawFrame(elapsed: number, debug: boolean, debugTemplateImages: ImageBitmap[] | null) {
         const ctx = this.ctx
-        ctx.clearRect(0, 0, 1920, 1080)
+        ctx.fillStyle = "black"
+        ctx.fillRect(0, 0, 1920, 1080)
         if (debug) {
             const img = debugTemplateImages![Math.floor(elapsed / PHCanvasDrawer.LENGTH * 74)]
             this.drawTemplateImage(ctx, img)

@@ -13,7 +13,8 @@ class App extends HTMLElement {
     progressDiv = this.querySelector("div.progress")!
     progressPercent = this.progressDiv.querySelector(".percent")!
     progressTime = this.progressDiv.querySelector(".time")!
-    startButton = this.querySelector("button.start") as HTMLButtonElement
+    playButton = this.querySelector("button.play") as HTMLButtonElement
+    playButtonDiv = this.playButton.querySelector("div")!
     exportButton = this.querySelector("button.export")!
     customTextDiv = this.querySelector("div.custom-text")!
     pTextInput = this.customTextDiv.querySelector("input.p-text") as HTMLInputElement
@@ -28,16 +29,16 @@ class App extends HTMLElement {
     animId = 0
 
     connectedCallback() {
-        this.startButton.addEventListener("click", async () => {
+        this.playButton.addEventListener("click", async () => {
             if (this.animPlaying) {
                 cancelAnimationFrame(this.animId)
                 this.audio.pause()
             } else {
-                this.startButton.disabled = true
+                this.playButton.disabled = true
                 this.audio.currentTime = 0
                 await this.audio.play()
                 this.startAnimation()
-                this.startButton.disabled = false
+                this.playButton.disabled = false
             }
             this.updatePlayButton(!this.animPlaying)
         })
@@ -66,7 +67,7 @@ class App extends HTMLElement {
                 this.ctx, this.pTextInput.value, this.hTextInput.value, this.cTextInput.value
             )
             if (!this.animPlaying) {
-                this.elapsed = 3000
+                this.elapsed = PHCanvasDrawer.LENGTH
                 this.drawFrame()
                 this.updateProgressText()
                 this.slider.valueAsNumber = this.elapsed
@@ -77,12 +78,17 @@ class App extends HTMLElement {
     }
 
     updateProgressText() {
-        this.progressPercent.textContent = (this.elapsed / PHCanvasDrawer.LENGTH).toFixed(4)
-        this.progressTime.textContent = `${this.elapsed}ms`
+        const percent = Math.round(this.elapsed / PHCanvasDrawer.LENGTH * 100)
+        this.progressPercent.textContent = `${percent}%`
+        this.progressTime.textContent = `${Math.round(this.elapsed)}ms`
     }
 
     updatePlayButton(playing: boolean) {
-        this.startButton.textContent = playing ? "Stop" : "Play"
+        if (playing) {
+            this.playButton.classList.add("playing")
+        } else {
+            this.playButton.classList.remove("playing")
+        }
         this.animPlaying = playing
     }
 
@@ -94,7 +100,7 @@ class App extends HTMLElement {
         let startTime = 0
         const animateFrame = (timestamp: number) => {
             if (startTime == 0) startTime = timestamp
-            this.elapsed = Math.min(Math.round(timestamp - startTime), PHCanvasDrawer.LENGTH)
+            this.elapsed = Math.min(timestamp - startTime, PHCanvasDrawer.LENGTH)
             this.updateProgressText()
             this.slider.valueAsNumber = this.elapsed
             this.drawFrame()

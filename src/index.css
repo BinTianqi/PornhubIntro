@@ -1,21 +1,182 @@
-canvas {
-    max-width: 90%;
-    background-color: black;
+:root {
+    --color-primary: #ff9900;
+    --color-on-primary: #3e2500;
+    --color-background: #110d06;
+    --color-surface: #2f1d00;
 }
 
-#actions {
+html {
+    background-color: var(--color-background);
+    color: white;
+}
+
+body {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: center;
+}
+
+ph-app {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 15px;
+    width: 95%;
+    max-width: 700px;
+}
+
+canvas {
+    width: 100%;
+    border: 1px solid hsl(from var(--color-primary) h 40 40);
+}
+
+div.progress {
+    margin: 4px 0;
+    opacity: 0.8;
+    font-size: 0.9em;
 }
 
 input.slider {
-    width: 90%;
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    margin: 15px 0 5px 0;
+    background: none;
+    
+    /* Chromium doesn't support selectors like "&::-webkit-slider-thumb, &::-moz-range-thumb" */
+    &::-webkit-slider-runnable-track {
+        -webkit-appearance: none;
+        height: 4px;
+        border-radius: 2px;
+        background-color: hsl(from var(--color-primary) h s 55);
+    }
+
+    &::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 20px;
+        height: 20px;
+        margin-top: -8px;
+        border-radius: 10px;
+        border: 2px solid white;
+        background-color: var(--color-primary);
+    }
+
+    &:hover::-webkit-slider-thumb {
+        background-color: hsl(from var(--color-primary) h s 30);
+    }
+
+    /* Firefox */
+    &::-moz-range-track {
+        height: 4px;
+        border-radius: 2px;
+        background-color: hsl(from var(--color-primary) h s 55);
+    }
+
+    &::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        margin-top: -8px;
+        border-radius: 10px;
+        border: 2px solid white;
+        box-sizing: border-box;
+        background-color: var(--color-primary);
+    }
+
+    &:hover::-moz-range-thumb {
+        background-color: hsl(from var(--color-primary) h s 30);
+    }
 }
 
-button {
-    width: 120px;
-    height: 30px;
+div.actions {
+    display: flex;
+    align-items: center;
+    margin: 8px 0;
 }
+
+button.primary {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 3px;
+    height: 34px;
+    width: 120px;
+    border-radius: 17px;
+    background-color: var(--color-primary);
+    border: none;
+    color: var(--color-on-primary);
+    font-size: 15px;
+    font-weight: 600;
+
+    &::after {
+        position: absolute;
+        inset: 0;
+        content: "";
+        opacity: 0;
+        background-color: var(--color-background);   
+    }
+
+    &:hover::after {
+        opacity: 0.1;
+    }
+
+    svg {
+        fill: var(--color-on-primary)
+    }
+}
+
+button.play {
+    > div {
+        display: inline-flex;
+        align-items: center;
+    }
+
+    &.playing > div:first-child {
+        display: none;
+    }
+
+    &:not(.playing) > div:last-child {
+        display: none;
+    }
+}
+
+div.custom-text {
+    width: 180px;
+    margin: 10px 0;
+
+    input {
+        appearance: none;
+        height: 30px;
+        padding: 0 5px;
+        box-sizing: border-box;
+        border: none;
+        border-radius: 4px;
+        outline: 1px solid hsl(from var(--color-primary) h 40 70);
+        background: transparent;
+        color: white;
+        font-size: 15px;
+
+        &:focus-visible {
+            outline-width: 2px;
+            outline-color: var(--color-primary);
+        }
+    }
+
+    > div {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+
+        > input {
+            width: 85px;
+        }
+    }
+
+    > input {
+        width: 100%;
+    }
+}
+
 
 .hidden {
     display: none;
