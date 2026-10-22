@@ -1,13 +1,17 @@
 :root {
     --color-primary: #ff9900;
     --color-on-primary: #3e2500;
-    --color-background: #110d06;
-    --color-surface: #2f1d00;
+    --color-background: #1e1711;
+    --color-surface: #282018;
+    --color-on-surface: #fff8f5;
+    --color-secondary-container: #2f1d00;
+    --color-on-secondary-container: #d79e68;
 }
 
 html {
     background-color: var(--color-background);
     color: white;
+    font-family: sans-serif;
 }
 
 body {
@@ -91,20 +95,44 @@ div.actions {
     display: flex;
     align-items: center;
     margin: 8px 0;
+
+    > button {
+        width: 120px;
+        margin: 0 3px;
+    }
 }
 
 button.primary {
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+
+    &::after {
+        background-color: white;
+    }
+
+    &:disabled {
+        background-color: rgb(from var(--color-on-surface) r g b / 0.1);
+        color: rgb(from var(--color-on-surface) r g b / 0.38);
+    }
+}
+
+button.tonal {
+    background-color: var(--color-secondary-container);
+    color: var(--color-on-secondary-container);
+
+    &::after {
+        background-color: var(--color-on-secondary-container);
+    }
+}
+
+button:is(.primary, .rounded) {
     position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    margin: 0 3px;
     height: 34px;
-    width: 120px;
     border-radius: 17px;
-    background-color: var(--color-primary);
     border: none;
-    color: var(--color-on-primary);
     font-size: 15px;
     font-weight: 600;
 
@@ -112,12 +140,18 @@ button.primary {
         position: absolute;
         inset: 0;
         content: "";
-        opacity: 0;
-        background-color: var(--color-background);   
+        border-radius: inherit;
+        opacity: 0;   
     }
 
-    &:hover::after {
-        opacity: 0.1;
+    &:not(:disabled) {
+        &:hover::after {
+            opacity: 0.08;
+        }
+
+        &:active::after {
+            opacity: 0.1;
+        }
     }
 
     svg {
@@ -177,6 +211,94 @@ div.custom-text {
     }
 }
 
+dialog {
+    &[open] {
+        display: flex;
+        flex-direction: column;
+    }
+
+    border: none;
+    border-radius: 25px;
+    padding: 25px;
+    background-color: var(--color-surface);
+    color: var(--color-on-surface);
+
+    > h2 {
+        margin: 0;
+    }
+
+    > h3 {
+        margin: 4px 0 0 0;
+    }
+
+    > .video-codecs {
+        margin-top: 4px;
+
+        > label {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 10px;
+        }
+    }
+
+    > .buttons {
+        align-self: flex-end;
+        margin-top: 20px;
+
+        > button {
+            width: 80px;
+        }
+    }
+
+    &::backdrop {
+        background-color: rgb(from black r g b / 0.4);
+        backdrop-filter: blur(4px);
+    }
+}
+
+input[type="radio"] {
+    appearance: none;
+    position: relative;
+    width: 20px;
+    height: 20px;
+    margin: 0 6px 0 0;
+    border-radius: 10px;
+    border: 2px solid var(--color-primary);
+
+    &::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 12px;
+        height: 12px;
+        border-radius: 6px;
+        background-color: var(--color-primary);
+        opacity: 0;
+    }
+
+    &:checked::before {
+        opacity: 1;
+    }
+
+    &::after {
+        position: absolute;
+        content: "";
+        inset: -6px;
+        border-radius: 50%;
+        opacity: 0;
+        background-color: var(--color-on-surface);
+    }
+
+    &:hover::after {
+        opacity: 0.08;
+    }
+
+    &:focus-visible::after {
+        opacity: 0.1;
+    }
+}
 
 .hidden {
     display: none;

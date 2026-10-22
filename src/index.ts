@@ -1,7 +1,7 @@
 import "./index.css"
 import PHCanvasDrawer from "./canvas.ts"
 import soundUrl from "./sound.aac"
-import { render } from "./renderer.ts"
+import { RenderConfig, render } from "./renderer.ts"
 
 const DEBUG = false // Do not submit with true
 
@@ -43,7 +43,7 @@ class App extends HTMLElement {
             this.updatePlayButton(!this.animPlaying)
         })
         this.exportButton.addEventListener("click", () => {
-            this.exportAnimation()
+            this.renderDialog.showModal()
         })
         if (DEBUG) this.debugCheckbox.addEventListener("change", async () => {
             this.debugMode = this.debugCheckbox.checked
@@ -74,6 +74,7 @@ class App extends HTMLElement {
             }
         })
         this.drawFrame()
+        this.initializeRenderDialog()
         if (DEBUG) this.querySelector("div.debug")!.classList.remove("hidden")
     }
 
@@ -113,16 +114,6 @@ class App extends HTMLElement {
         this.animId = requestAnimationFrame(animateFrame)
     }
 
-    async exportAnimation() {
-        const a = document.createElement("a")
-        a.download = "pornhub-intro.mp4"
-        const blobUrl = await render(
-            this.pTextInput.value, this.hTextInput.value, this.cTextInput.value
-        )
-        a.href = blobUrl
-        a.click()
-    }
-
     templateImages: ImageBitmap[] = []
 
     async loadTemplateImages() {
@@ -139,6 +130,64 @@ class App extends HTMLElement {
         }
         await Promise.all(promises)
     }
+
+    renderDialog = this.querySelector("dialog.render") as HTMLDialogElement
+    dVideoCodecsDiv = this.renderDialog.querySelector("div.video-codecs")!
+    dCancalButton = this.renderDialog.querySelector("button.cancel")!
+    dRenderButton = this.renderDialog.querySelector("button.render") as HTMLButtonElement
+
+    initializeRenderDialog() {
+        VideoCodecs.forEach((codec) => {
+            const id = `codec-selection-${codec.value}`
+            const label = document.createElement("label")
+            label.setAttribute("for", id)
+            const input = document.createElement("input")
+            input.id = id
+            input.name = "codec-selection"
+            input.type = "radio"
+            input.value = codec.value
+            if (codec.value == "avc") input.checked = true
+            const span = document.createElement("span")
+            span.textContent = codec.label
+            label.append(input, span)
+            this.dVideoCodecsDiv.append(label)
+        })
+        this.dCancalButton.addEventListener("click", () => {
+            this.renderDialog.close()
+        })
+        this.dRenderButton.addEventListener("click", this.exportAnimation.bind(this))
+    }
+
+    async exportAnimation() {
+        this.dRenderButton.disabled = true
+        const checkedCodec = this.dVideoCodecsDiv.querySelector<HTMLInputElement>("input:checked")!
+        const config: RenderConfig = {
+            text: {
+                p: this.pTextInput.value,
+                h: this.hTextInput.value,
+                c: this.cTextInput.value
+            },
+            vCodec: checkedCodec.value as RenderConfig["vCodec"]
+        }
+        try {
+            const blobUrl = await render(config)
+            const a = document.createElement("a")
+            a.download = "pornhub-intro.mp4"
+            a.href = blobUrl
+            a.click()
+        } catch (e) {
+            if (e instanceof Error) alert("Error:\n" + e.message)
+            console.warn(e)
+        }
+        this.dRenderButton.disabled = false
+    }
 }
+
+const VideoCodecs: { label: string, value: RenderConfig["vCodec"] }[] = [
+    { label: "AVC", value: "avc" },
+    { label: "HEVC", value: "hevc" },
+    { label: "VP9", value: "vp9" },
+    { label: "AV1", value: "av1" }
+]
 
 customElements.define("ph-app", App)

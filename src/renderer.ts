@@ -2,7 +2,12 @@ import PHCanvasDrawer from "./canvas.ts"
 import * as M from "mediabunny"
 import soundUrl from "./sound.aac"
 
-export async function render(pText: string, hText: string, cText: string) {
+export interface RenderConfig {
+    text: { p: string, h: string, c: string },
+    vCodec: M.VideoCodec
+}
+
+export async function render(config: RenderConfig) {
     const startTime = performance.now()
     const audioUrl = new M.UrlSource(soundUrl)
     const audioInput = new M.Input({
@@ -14,9 +19,9 @@ export async function render(pText: string, hText: string, cText: string) {
 
     const canvas = new OffscreenCanvas(1920, 1080)
     const ctx = canvas.getContext("2d")!
-    const drawer = new PHCanvasDrawer(ctx, pText, hText, cText)
+    const drawer = new PHCanvasDrawer(ctx, config.text.p, config.text.h, config.text.c)
     const canvasSource = new M.CanvasSource(canvas, {
-        codec: "avc",
+        codec: config.vCodec,
         quality: new M.Quality("medium")
     })
 
@@ -43,7 +48,7 @@ async function addCanvasFrames(drawer: PHCanvasDrawer, source: M.CanvasSource) {
     const frameTime = 1000 / 60
     const frames = Math.floor(PHCanvasDrawer.LENGTH / frameTime)
     for (let i = 0; i < frames; i++) {
-        drawer.drawFrame(i * frameTime / PHCanvasDrawer.LENGTH, false, null)
+        drawer.drawFrame(i * frameTime, false, null)
         await source.add(i * frameTime / 1000)
     }
 }
