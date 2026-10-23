@@ -2,6 +2,7 @@ import "./index.css"
 import PHCanvasDrawer from "./canvas.ts"
 import soundUrl from "./sound.aac"
 import { RenderConfig, render } from "./renderer.ts"
+import initI18n from "./i18n.ts"
 
 const DEBUG = false // Do not submit with true
 
@@ -29,6 +30,7 @@ class App extends HTMLElement {
     animId = 0
 
     connectedCallback() {
+        initI18n()
         this.playButton.addEventListener("click", async () => {
             if (this.animPlaying) {
                 cancelAnimationFrame(this.animId)
