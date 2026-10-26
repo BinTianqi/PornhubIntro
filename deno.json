@@ -6,6 +6,7 @@
     "trailingCommas": "onlyMultiLine"
   },
   "tasks": {
+    "deploy": "deno run --allow-all npm:wrangler pages deploy ./src/dist --project-name pornhub-intro",
     "build": "deno run --allow-all npm:vite build src",
     "dev": "deno run --allow-all npm:vite src"
   },
@@ -13,6 +14,7 @@
   "imports": {
     "@deno/vite-plugin": "npm:@deno/vite-plugin@^2.0.3",
     "mediabunny": "npm:mediabunny@^1.61.6",
+    "wrangler": "npm:wrangler@^4.152.0",
     "vite": "npm:vite@^8.2.2"
   },
   "compilerOptions": {
