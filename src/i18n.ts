@@ -1,4 +1,5 @@
 const en = {
+    site_title: "Pornhub-style intro generator",
     play: "Play",
     pause: "Pause",
     export: "Export",
@@ -8,9 +9,12 @@ const en = {
     cancel: "Cancel",
     render: "Render",
     rendering: "Rendering...",
+    disclaimer: "This tool doesn't upload any data",
+    source_code: "Source code",
 }
 
 const zh_CN = {
+    site_title: "Pornhub风格片头生成器",
     play: "播放",
     pause: "暂停",
     export: "导出",
@@ -20,6 +24,8 @@ const zh_CN = {
     cancel: "取消",
     render: "渲染",
     rendering: "渲染中...",
+    disclaimer: "此工具不会上传任何数据",
+    source_code: "源代码",
 }
 
 function applyI18n() {
