@@ -12,10 +12,10 @@
   },
   "nodeModulesDir": "auto",
   "imports": {
-    "@deno/vite-plugin": "npm:@deno/vite-plugin@^2.0.3",
-    "mediabunny": "npm:mediabunny@^1.61.6",
+    "@deno/vite-plugin": "npm:@deno/vite-plugin@^2.0.4",
+    "mediabunny": "npm:mediabunny@^1.62.1",
     "wrangler": "npm:wrangler@^4.152.0",
-    "vite": "npm:vite@^8.2.2"
+    "vite": "npm:vite@^8.3.5"
   },
   "compilerOptions": {
     "lib": [
