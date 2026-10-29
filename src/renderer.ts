@@ -3,7 +3,8 @@ import * as M from "mediabunny"
 import soundUrl from "./sound.aac"
 
 export interface RenderConfig {
-    text: { p: string, h: string, c: string },
+    text: { p: string, h: string, c: string }
+    frameRate: number
     vCodec: M.VideoCodec
 }
 
@@ -29,10 +30,10 @@ export async function render(config: RenderConfig) {
         format: new M.Mp4OutputFormat(),
         target: new M.BufferTarget()
     })
-    output.addVideoTrack(canvasSource, { frameRate: 60 })
+    output.addVideoTrack(canvasSource, { frameRate: config.frameRate })
     output.addAudioTrack(audioSource)
     await output.start()
-    const videoTask = addCanvasFrames(drawer, canvasSource)
+    const videoTask = addCanvasFrames(drawer, canvasSource, config.frameRate)
     const audioTask = addAudioPackets(audioTrack, audioSource)
     await Promise.all([videoTask, audioTask])
     await output.finalize()
@@ -44,8 +45,10 @@ export async function render(config: RenderConfig) {
     // how to revoke
 }
 
-async function addCanvasFrames(drawer: PHCanvasDrawer, source: M.CanvasSource) {
-    const frameTime = 1000 / 60
+async function addCanvasFrames(
+    drawer: PHCanvasDrawer, source: M.CanvasSource, frameRate: number
+) {
+    const frameTime = 1000 / frameRate
     const frames = Math.floor(PHCanvasDrawer.LENGTH / frameTime)
     for (let i = 0; i < frames; i++) {
         drawer.drawFrame(i * frameTime, false, null)

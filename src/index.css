@@ -217,6 +217,7 @@ dialog {
         flex-direction: column;
     }
 
+    max-width: 80%;
     border: none;
     border-radius: 25px;
     padding: 25px;
@@ -231,13 +232,13 @@ dialog {
         margin: 8px 0 0 0;
     }
 
-    > .video-codecs {
+    > .video-codecs, > .framerate-options {
         margin-top: 4px;
 
         > label {
             display: inline-flex;
             align-items: center;
-            margin-right: 10px;
+            margin: 4px 10px 6px 0;
         }
     }
 

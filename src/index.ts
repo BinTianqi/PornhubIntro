@@ -134,6 +134,7 @@ class App extends HTMLElement {
     }
 
     renderDialog = this.querySelector("dialog.render") as HTMLDialogElement
+    dFramerateDiv = this.renderDialog.querySelector("div.framerate-options")!
     dVideoCodecsDiv = this.renderDialog.querySelector("div.video-codecs")!
     dCancalButton = this.renderDialog.querySelector("button.cancel")!
     dRenderButton = this.renderDialog.querySelector("button.render") as HTMLButtonElement
@@ -154,6 +155,21 @@ class App extends HTMLElement {
             label.append(input, span)
             this.dVideoCodecsDiv.append(label)
         })
+        for (let i = 0; i < FrameRateOptions.length; i++) {
+            const id = `framerate-option-${i}`
+            const label = document.createElement("label")
+            label.setAttribute("for", id)
+            const input = document.createElement("input")
+            input.id = id
+            input.name = "framerate-option"
+            input.type = "radio"
+            input.value = i.toString()
+            if (i == 4) input.checked = true // default to 60 FPS
+            const span = document.createElement("span")
+            span.textContent = FrameRateOptions[i].label
+            label.append(input, span)
+            this.dFramerateDiv.append(label)
+        }
         this.dCancalButton.addEventListener("click", () => {
             this.renderDialog.close()
         })
@@ -163,18 +179,21 @@ class App extends HTMLElement {
     async exportAnimation() {
         this.dRenderButton.disabled = true
         const checkedCodec = this.dVideoCodecsDiv.querySelector<HTMLInputElement>("input:checked")!
+        const checkedFramerate = this.dFramerateDiv.querySelector<HTMLInputElement>("input:checked")!
+        const framerateOption = FrameRateOptions[parseInt(checkedFramerate.value)]
         const config: RenderConfig = {
             text: {
                 p: this.pTextInput.value,
                 h: this.hTextInput.value,
                 c: this.cTextInput.value
             },
+            frameRate: framerateOption.value,
             vCodec: checkedCodec.value as RenderConfig["vCodec"]
         }
         try {
             const blobUrl = await render(config)
             const a = document.createElement("a")
-            a.download = "pornhub-intro.mp4"
+            a.download = `pornhub-intro-${framerateOption.label}fps-${checkedCodec.value}.mp4`
             a.href = blobUrl
             a.click()
         } catch (e) {
@@ -186,10 +205,19 @@ class App extends HTMLElement {
 }
 
 const VideoCodecs: { label: string, value: RenderConfig["vCodec"] }[] = [
-    { label: "AVC", value: "avc" },
-    { label: "HEVC", value: "hevc" },
+    { label: "AVC (H.264)", value: "avc" },
+    { label: "HEVC (H.265)", value: "hevc" },
     { label: "VP9", value: "vp9" },
     { label: "AV1", value: "av1" }
+]
+
+const FrameRateOptions: { label: string, value: number }[] = [
+    { label: "23.976", value: 24000 / 1001 },
+    { label: "29.97", value: 30000 / 1001 },
+    { label: "30", value: 30 },
+    { label: "59.94", value: 60000 / 1001 },
+    { label: "60", value: 60 },
+    { label: "120", value: 120 }
 ]
 
 customElements.define("ph-app", App)
