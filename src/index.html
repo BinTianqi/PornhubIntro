@@ -54,12 +54,11 @@
     </div>
     <dialog class="render">
         <h2 data-i18n="render">Render</h2>
-        <h3 data-i18n="resolution">Resolution</h3>
-        <span>1920x1080</span>
-        <h3 data-i18n="framerate">Framerate</h3>
-        <div class="framerate-options"></div>
-        <h3 data-i18n="video_codecs">Video codec</h3>
-        <div class="video-codecs"></div>
+        <div class="resolution">
+            <span data-i18n="resolution" class="label">Resolution</span>
+            <span>1920x1080</span>
+        </div>
+        <div class="options"></div>
         <div class="buttons">
             <button class="cancel rounded tonal" data-i18n="cancel">Cancel</button>
             <button class="render primary">
@@ -69,5 +68,26 @@
         </div>
     </dialog>
 </ph-app>
+<template class="dropdown-menu">
+    <dropdown-menu>
+        <span></span>
+        <div class="field">
+            <span></span>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24px" width="24px">
+                <path d="M12,15L7,10H17l-5,5Z"/>
+            </svg>
+        </div>
+        <div class="menu"></div>
+    </dropdown-menu>
+</template>
+<template class="menu-option">
+    <label class="menu-option">
+        <span></span>
+        <input type="radio">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24px" width="24px">
+            <path d="M9.55,18l-5.7-5.7l1.43-1.42l4.28,4.28l9.18-9.18L20.15,7.4L9.55,18Z"/>
+        </svg>
+    </label>
+</template>
 </body>
 </html>

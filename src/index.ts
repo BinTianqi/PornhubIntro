@@ -2,7 +2,7 @@ import "./index.css"
 import PHCanvasDrawer from "./canvas.ts"
 import soundUrl from "./sound.aac"
 import { RenderConfig, render } from "./renderer.ts"
-import initI18n from "./i18n.ts"
+import * as i18n from "./i18n.ts"
 
 const DEBUG = false // Do not submit with true
 
@@ -30,7 +30,7 @@ class App extends HTMLElement {
     animId = 0
 
     connectedCallback() {
-        initI18n()
+        i18n.init()
         this.playButton.addEventListener("click", async () => {
             if (this.animPlaying) {
                 cancelAnimationFrame(this.animId)
@@ -134,41 +134,25 @@ class App extends HTMLElement {
     }
 
     renderDialog = this.querySelector("dialog.render") as HTMLDialogElement
-    dFramerateDiv = this.renderDialog.querySelector("div.framerate-options")!
-    dVideoCodecsDiv = this.renderDialog.querySelector("div.video-codecs")!
+    dFramerateMenu = DropdownMenu.createFromTemplate()
+    dVideoCodecMenu = DropdownMenu.createFromTemplate()
     dCancalButton = this.renderDialog.querySelector("button.cancel")!
     dRenderButton = this.renderDialog.querySelector("button.render") as HTMLButtonElement
 
     initializeRenderDialog() {
+        const optionsDiv = this.renderDialog.querySelector("div.options")!
+        optionsDiv.append(this.dFramerateMenu, this.dVideoCodecMenu)
+        this.dFramerateMenu.setLabel("framerate")
         VideoCodecs.forEach((codec) => {
-            const id = `codec-selection-${codec.value}`
-            const label = document.createElement("label")
-            label.setAttribute("for", id)
-            const input = document.createElement("input")
-            input.id = id
-            input.name = "codec-selection"
-            input.type = "radio"
-            input.value = codec.value
-            if (codec.value == "avc") input.checked = true
-            const span = document.createElement("span")
-            span.textContent = codec.label
-            label.append(input, span)
-            this.dVideoCodecsDiv.append(label)
+            this.dVideoCodecMenu.addOption(
+                codec.label, codec.value, "codec-selection", codec.value == "avc"
+            )
         })
+        this.dVideoCodecMenu.setLabel("video_encoder")
         for (let i = 0; i < FrameRateOptions.length; i++) {
-            const id = `framerate-option-${i}`
-            const label = document.createElement("label")
-            label.setAttribute("for", id)
-            const input = document.createElement("input")
-            input.id = id
-            input.name = "framerate-option"
-            input.type = "radio"
-            input.value = i.toString()
-            if (i == 4) input.checked = true // default to 60 FPS
-            const span = document.createElement("span")
-            span.textContent = FrameRateOptions[i].label
-            label.append(input, span)
-            this.dFramerateDiv.append(label)
+            this.dFramerateMenu.addOption(
+                FrameRateOptions[i].label, i.toString(), "framerate-selection", i == 4
+            )
         }
         this.dCancalButton.addEventListener("click", () => {
             this.renderDialog.close()
@@ -178,9 +162,9 @@ class App extends HTMLElement {
 
     async exportAnimation() {
         this.dRenderButton.disabled = true
-        const checkedCodec = this.dVideoCodecsDiv.querySelector<HTMLInputElement>("input:checked")!
-        const checkedFramerate = this.dFramerateDiv.querySelector<HTMLInputElement>("input:checked")!
-        const framerateOption = FrameRateOptions[parseInt(checkedFramerate.value)]
+        const checkedCodec = this.dVideoCodecMenu.getInputValue()
+        const checkedFramerate = this.dFramerateMenu.getInputValue()
+        const framerateOption = FrameRateOptions[parseInt(checkedFramerate)]
         const config: RenderConfig = {
             text: {
                 p: this.pTextInput.value,
@@ -188,12 +172,12 @@ class App extends HTMLElement {
                 c: this.cTextInput.value
             },
             frameRate: framerateOption.value,
-            vCodec: checkedCodec.value as RenderConfig["vCodec"]
+            vCodec: checkedCodec as RenderConfig["vCodec"]
         }
         try {
             const blobUrl = await render(config)
             const a = document.createElement("a")
-            a.download = `pornhub-intro-${framerateOption.label}fps-${checkedCodec.value}.mp4`
+            a.download = `pornhub-intro-${framerateOption.label}fps-${checkedCodec}.mp4`
             a.href = blobUrl
             a.click()
         } catch (e) {
@@ -220,4 +204,60 @@ const FrameRateOptions: { label: string, value: number }[] = [
     { label: "120", value: 120 }
 ]
 
+class DropdownMenu extends HTMLElement {
+    labelSpan = this.querySelector("span")!
+    field = this.querySelector(".field")!
+    fieldSpan = this.field.querySelector("span")!
+    menu = this.querySelector(".menu")!
+
+    optionTemplate = document.querySelector("template.menu-option") as HTMLTemplateElement
+
+    connectedCallback() {
+        this.field.addEventListener("click", () => {
+            this.classList.toggle("active")
+        })
+        this.menu.addEventListener("input", (e) => {
+            const target = e.target as HTMLInputElement
+            this.fieldSpan.textContent = target.parentElement!.querySelector("span")!.textContent
+        })
+        document.addEventListener("click", (e) => {
+            const target = e.target as Element
+            if (!this.field.contains(target)) {
+                this.classList.remove("active")
+            }
+        })
+    }
+
+    addOption(labelText: string, value: string, inputName: string, checked: boolean) {
+        const df = this.optionTemplate.content.cloneNode(true) as DocumentFragment
+        const label = df.querySelector("label")!
+        const input = label.querySelector("input")!
+        input.value = value
+        input.name = inputName
+        if (checked) {
+            input.checked = true
+            this.fieldSpan.textContent = labelText
+        }
+        const span = label.querySelector("span")!
+        span.textContent = labelText
+        this.menu.append(label)
+    }
+
+    setLabel(i18nKey: keyof typeof i18n.i18nMap) {
+        this.labelSpan.dataset.i18n = i18nKey
+        this.labelSpan.textContent = i18n.getText(i18nKey)
+    }
+
+    getInputValue() {
+        return this.menu.querySelector<HTMLInputElement>("input:checked")!.value
+    }
+
+    static createFromTemplate() {
+        const template = document.querySelector("template.dropdown-menu") as HTMLTemplateElement
+        const df = template.content.cloneNode(true) as DocumentFragment
+        return df.querySelector("dropdown-menu") as DropdownMenu
+    }
+}
+
+customElements.define("dropdown-menu", DropdownMenu)
 customElements.define("ph-app", App)

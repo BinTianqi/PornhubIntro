@@ -6,6 +6,8 @@
     --color-on-surface: #fff8f5;
     --color-secondary-container: #2f1d00;
     --color-on-secondary-container: #d79e68;
+    --color-outline: #a18c79;
+    --color-on-surface-variant: #fff8f5;
 }
 
 html {
@@ -228,18 +230,20 @@ dialog {
         margin: 0;
     }
 
-    > h3 {
-        margin: 8px 0 0 0;
+    > div.resolution {
+        margin: 4px 0;
+        > span.label {
+            font-weight: bold;
+            display: block;
+        }
     }
 
-    > .video-codecs, > .framerate-options {
-        margin-top: 4px;
 
-        > label {
-            display: inline-flex;
-            align-items: center;
-            margin: 4px 10px 6px 0;
-        }
+    > div.options {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 12px;
+        margin-bottom: 200px;
     }
 
     > .buttons {
@@ -273,46 +277,102 @@ dialog {
     }
 }
 
-input[type="radio"] {
-    appearance: none;
+dropdown-menu {
     position: relative;
-    width: 20px;
-    height: 20px;
-    margin: 0 6px 0 0;
-    border-radius: 10px;
-    border: 2px solid var(--color-primary);
 
-    &::before {
-        content: "";
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        width: 12px;
-        height: 12px;
-        border-radius: 6px;
-        background-color: var(--color-primary);
-        opacity: 0;
+    > span {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 2px;
     }
 
-    &:checked::before {
-        opacity: 1;
+    > div.field {
+        display: inline-flex;
+        align-items: center;
+        justify-content: space-between;
+        box-sizing: border-box;
+        width: 160px;
+        padding: 8px 8px 8px 10px;
+        border: 1px solid var(--color-outline);
+        border-radius: 4px;
+        cursor: pointer;
+
+        > svg {
+            fill: var(--color-on-surface-variant);
+        }
+    }
+
+    > div.menu {
+        position: absolute;
+        z-index: 10;
+        left: 0;
+        right: 0;
+        display: none;
+        animation: 0.1s menu-scale;
+        transform-origin: top center;
+        top: calc(100% + 5px);
+        background-color: var(--color-background);
+        padding: 4px 0;
+    }
+
+    &.active {
+        div.field svg {
+            rotate: 180;
+        }
+
+        div.menu {
+            display: block;
+        }
+    }
+}
+
+@keyframes menu-scale {
+    from {
+        scale: 0.95;
+    }
+
+    to {
+        scale: 1.0
+    }
+}
+
+label.menu-option {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 8px 6px 12px;
+
+    > input {
+        display: none;
+    }
+
+    > svg {
+        display: none;
+        fill: var(--color-on-surface-variant);
+    }
+
+    &:has(input:checked) {
+        background-color: var(--color-secondary-container);
+
+        svg {
+            display: inline-block;
+        }
     }
 
     &::after {
         position: absolute;
         content: "";
-        inset: -6px;
-        border-radius: 50%;
-        opacity: 0;
+        inset: 0;
         background-color: var(--color-on-surface);
+        opacity: 0;
     }
 
     &:hover::after {
         opacity: 0.08;
     }
 
-    &:focus-visible::after {
+    &:active::after {
         opacity: 0.1;
     }
 }
