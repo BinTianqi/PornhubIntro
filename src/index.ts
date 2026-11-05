@@ -134,14 +134,23 @@ class App extends HTMLElement {
     }
 
     renderDialog = this.querySelector("dialog.render") as HTMLDialogElement
-    dFramerateMenu = DropdownMenu.createFromTemplate()
-    dVideoCodecMenu = DropdownMenu.createFromTemplate()
+    dTypeMenu = DropdownMenu.createFromTemplate(["type"])
+    dFramerateMenu = DropdownMenu.createFromTemplate(["video"])
+    dVideoCodecMenu = DropdownMenu.createFromTemplate(["video"])
+    dImageFormatMenu = DropdownMenu.createFromTemplate(["current_frame"])
     dCancalButton = this.renderDialog.querySelector("button.cancel")!
     dRenderButton = this.renderDialog.querySelector("button.render") as HTMLButtonElement
 
     initializeRenderDialog() {
+        this.renderDialog.insertBefore(
+            this.dTypeMenu, this.renderDialog.querySelector("h2")!.nextElementSibling
+        )
+        this.dTypeMenu.setLabel("type")
+        RenderTypeOptions.forEach((option) => {
+            this.dTypeMenu.addTypeOption(option, option.label == "video")
+        })
         const optionsDiv = this.renderDialog.querySelector("div.options")!
-        optionsDiv.append(this.dFramerateMenu, this.dVideoCodecMenu)
+        optionsDiv.append(this.dFramerateMenu, this.dVideoCodecMenu, this.dImageFormatMenu)
         this.dFramerateMenu.setLabel("framerate")
         VideoCodecs.forEach((codec) => {
             this.dVideoCodecMenu.addOption(
@@ -154,6 +163,12 @@ class App extends HTMLElement {
                 FrameRateOptions[i].label, i.toString(), "framerate-selection", i == 4
             )
         }
+        this.dImageFormatMenu.setLabel("format")
+        for (let i = 0; i < ImageFormats.length; i++) {
+            this.dImageFormatMenu.addOption(
+                ImageFormats[i].label, i.toString(), "format-selection", i == 0
+            )
+        }
         this.dCancalButton.addEventListener("click", () => {
             this.renderDialog.close()
         })
@@ -162,6 +177,26 @@ class App extends HTMLElement {
 
     async exportAnimation() {
         this.dRenderButton.disabled = true
+        const mode = this.dTypeMenu.getInputValue()
+        try {
+            let result: RenderResult
+            if (mode == "video") {
+                result = await this.renderVideo()
+            } else {
+                result = await this.renderCurrentFrame()
+            }
+            const a = document.createElement("a")
+            a.download = result.name
+            a.href = result.url
+            a.click()
+        } catch (e) {
+            if (e instanceof Error) alert("Error:\n" + e.message)
+            console.warn(e)
+        }
+        this.dRenderButton.disabled = false
+    }
+
+    async renderVideo() {
         const checkedCodec = this.dVideoCodecMenu.getInputValue()
         const checkedFramerate = this.dFramerateMenu.getInputValue()
         const framerateOption = FrameRateOptions[parseInt(checkedFramerate)]
@@ -174,18 +209,32 @@ class App extends HTMLElement {
             frameRate: framerateOption.value,
             vCodec: checkedCodec as RenderConfig["vCodec"]
         }
-        try {
-            const blobUrl = await render(config)
-            const a = document.createElement("a")
-            a.download = `pornhub-intro-${framerateOption.label}fps-${checkedCodec}.mp4`
-            a.href = blobUrl
-            a.click()
-        } catch (e) {
-            if (e instanceof Error) alert("Error:\n" + e.message)
-            console.warn(e)
+        return {
+            url: await render(config),
+            name: `pornhub-intro-${framerateOption.label}fps-${checkedCodec}.mp4`
         }
-        this.dRenderButton.disabled = false
     }
+
+    renderCurrentFrame() {
+        return new Promise<RenderResult>((res, rej) => {
+            const format = ImageFormats[parseInt(this.dImageFormatMenu.getInputValue())]
+            this.canvas.toBlob((blob) => {
+                if (blob) {
+                    res({
+                        url: URL.createObjectURL(blob),
+                        name: `pornhub-intro-frame-${this.elapsed}.${format.ext}`
+                    })
+                } else {
+                    rej()
+                }
+            }, format.value)
+        })
+    }
+}
+
+interface RenderResult {
+    url: string
+    name: string
 }
 
 const VideoCodecs: { label: string, value: RenderConfig["vCodec"] }[] = [
@@ -202,6 +251,28 @@ const FrameRateOptions: { label: string, value: number }[] = [
     { label: "59.94", value: 60000 / 1001 },
     { label: "60", value: 60 },
     { label: "120", value: 120 }
+]
+
+const ImageFormats = [
+    { label: "PNG", value: "image/png", ext: "png" },
+    { label: "JPEG", value: "image/jpwg", ext: "jpeg" },
+    { label: "WebP", value: "image/webp", ext: "webp" },
+]
+
+interface RenderTypeOption {
+    label: keyof typeof i18n.i18nMap,
+    icon: string
+}
+
+const RenderTypeOptions: RenderTypeOption[] = [
+    {
+        label: "video",
+        icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24px" width="24px"><path d="M4,4L6,8H9L7,4H9l2,4h3L12,4h2l2,4h3L17,4h3q0.83,0 1.41,0.59Q22,5.18 22,6V18q0,0.82-0.59,1.41T20,20H4q-0.82,0-1.41-0.59T2,18V6Q2,5.18 2.59,4.59T4,4Zm0,6v8H20V10H4Zm0,0v8V10Z"/></svg>`
+    },
+    {
+        label: "current_frame",
+        icon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" height="24px" width="24px"><path d="M5,21q-0.83,0-1.41-0.59T3,19V5Q3,4.17 3.59,3.59T5,3H19q0.83,0 1.41,0.59T21,5V19q0,0.82-0.59,1.41T19,21H5Zm0-2H19V5H5V19Zm1-2H18l-3.75-5l-3,4L9,13L6,17ZM5,19V5V19Z"/></svg>`
+    }
 ]
 
 class DropdownMenu extends HTMLElement {
@@ -243,6 +314,31 @@ class DropdownMenu extends HTMLElement {
         this.menu.append(label)
     }
 
+    addTypeOption(option: RenderTypeOption, checked: boolean) {
+        const svgDf = document.createRange().createContextualFragment(option.icon)
+        const svg = svgDf.querySelector("svg")!
+        const df = this.optionTemplate.content.cloneNode(true) as DocumentFragment
+        const label = df.querySelector("label")!
+        label.prepend(svg)
+        const input = label.querySelector("input")!
+        input.value = option.label
+        input.name = "render-type"
+        if (checked) {
+            input.checked = true
+            this.fieldSpan.textContent = i18n.getText(option.label)
+            this.field.prepend(svg.cloneNode(true))
+        }
+        const span = label.querySelector("span")!
+        span.dataset.i18n = option.label
+        span.textContent = i18n.getText(option.label)
+        const fieldSvg = svg.cloneNode(true)
+        input.addEventListener("input", () => {
+            this.field.querySelector("svg")!.remove()
+            this.field.prepend(fieldSvg)
+        })
+        this.menu.append(label)
+    }
+
     setLabel(i18nKey: keyof typeof i18n.i18nMap) {
         this.labelSpan.dataset.i18n = i18nKey
         this.labelSpan.textContent = i18n.getText(i18nKey)
@@ -252,10 +348,12 @@ class DropdownMenu extends HTMLElement {
         return this.menu.querySelector<HTMLInputElement>("input:checked")!.value
     }
 
-    static createFromTemplate() {
+    static createFromTemplate(cssClass: string[]) {
         const template = document.querySelector("template.dropdown-menu") as HTMLTemplateElement
         const df = template.content.cloneNode(true) as DocumentFragment
-        return df.querySelector("dropdown-menu") as DropdownMenu
+        const menu = df.querySelector("dropdown-menu") as DropdownMenu
+        menu.classList.add(...cssClass)
+        return menu
     }
 }
 

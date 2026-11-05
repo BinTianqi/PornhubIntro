@@ -108,6 +108,10 @@ button.primary {
     background-color: var(--color-primary);
     color: var(--color-on-primary);
 
+    svg {
+        fill: var(--color-on-primary)
+    }
+
     &::after {
         background-color: white;
     }
@@ -115,6 +119,10 @@ button.primary {
     &:disabled {
         background-color: rgb(from var(--color-on-surface) r g b / 0.1);
         color: rgb(from var(--color-on-surface) r g b / 0.38);
+
+        svg {
+            fill: rgb(from var(--color-on-surface) r g b / 0.38);
+        }
     }
 }
 
@@ -154,10 +162,6 @@ button:is(.primary, .rounded) {
         &:active::after {
             opacity: 0.1;
         }
-    }
-
-    svg {
-        fill: var(--color-on-primary)
     }
 }
 
@@ -219,6 +223,7 @@ dialog {
         flex-direction: column;
     }
 
+    width: 350px;
     max-width: 80%;
     border: none;
     border-radius: 25px;
@@ -228,6 +233,14 @@ dialog {
 
     > h2 {
         margin: 0;
+    }
+
+    > dropdown-menu.type {
+        margin: 6px 0;
+
+        .field {
+            width: 220px;
+        }
     }
 
     > div.resolution {
@@ -243,7 +256,11 @@ dialog {
         display: flex;
         flex-wrap: wrap;
         gap: 6px 12px;
-        margin-bottom: 200px;
+        height: 250px;
+
+        > dropdown-menu {
+            display: none;
+        }
     }
 
     > .buttons {
@@ -271,6 +288,14 @@ dialog {
         }
     }
 
+    &:has(.type input[value="video"]:checked) > .options > dropdown-menu.video {
+        display: inline-block;
+    }
+
+    &:has(.type input[value="current_frame"]:checked) > .options > dropdown-menu.current_frame {
+        display: inline-block;
+    }
+
     &::backdrop {
         background-color: rgb(from black r g b / 0.4);
         backdrop-filter: blur(4px);
@@ -279,6 +304,8 @@ dialog {
 
 dropdown-menu {
     position: relative;
+    width: fit-content;
+    height: fit-content;
 
     > span {
         display: block;
@@ -289,7 +316,6 @@ dropdown-menu {
     > div.field {
         display: inline-flex;
         align-items: center;
-        justify-content: space-between;
         box-sizing: border-box;
         width: 160px;
         padding: 8px 8px 8px 10px;
@@ -297,8 +323,16 @@ dropdown-menu {
         border-radius: 4px;
         cursor: pointer;
 
-        > svg {
+        svg {
             fill: var(--color-on-surface-variant);
+        }
+
+        > svg:first-child {
+            margin-right: 10px;
+        }
+
+        > svg:last-child {
+            margin-left: auto;
         }
     }
 
@@ -308,7 +342,7 @@ dropdown-menu {
         left: 0;
         right: 0;
         display: none;
-        animation: 0.1s menu-scale;
+        animation: 80ms menu-scale;
         transform-origin: top center;
         top: calc(100% + 5px);
         background-color: var(--color-background);
@@ -316,8 +350,8 @@ dropdown-menu {
     }
 
     &.active {
-        div.field svg {
-            rotate: 180;
+        div.field svg:last-child {
+            rotate: 180deg;
         }
 
         div.menu {
@@ -328,7 +362,7 @@ dropdown-menu {
 
 @keyframes menu-scale {
     from {
-        scale: 0.95;
+        scale: calc((100% - 6px) / 100%);
     }
 
     to {
@@ -340,16 +374,23 @@ label.menu-option {
     position: relative;
     display: flex;
     align-items: center;
-    justify-content: space-between;
     padding: 6px 8px 6px 12px;
 
     > input {
         display: none;
     }
 
-    > svg {
-        display: none;
+    svg {
         fill: var(--color-on-surface-variant);
+    }
+
+    > svg:first-child {
+        margin-right: 10px;
+    }
+
+    > svg:last-child {
+        display: none;
+        margin-left: auto;
     }
 
     &:has(input:checked) {
