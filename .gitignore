@@ -5,4 +5,4 @@ deno.lock
 .vite
 src/public/frames
 src/dist
-
+src/public/logo.png
