@@ -6,3 +6,4 @@ deno.lock
 src/public/frames
 src/dist
 src/public/logo.png
+src/public/banner.png

@@ -222,7 +222,7 @@ class App extends HTMLElement {
                 if (blob) {
                     res({
                         url: URL.createObjectURL(blob),
-                        name: `pornhub-intro-frame-${this.elapsed}.${format.ext}`
+                        name: `pornhub-intro-frame-${Math.floor(this.elapsed)}.${format.ext}`
                     })
                 } else {
                     rej()
